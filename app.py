@@ -15,7 +15,7 @@ from PIL import Image
 from io import BytesIO
 import urllib3
 import urllib.parse
-from mappings import soil_properties, season_rainfall, crop_images, get_crop_image
+from mappings import soil_properties, season_rainfall
 from weather import get_live_weather
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
