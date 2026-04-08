@@ -1,4 +1,13 @@
-# mappings.py
+# mappings.py (Add this to the bottom)
+
+# Dictionary linking crop names to image URLs
+crop_images = {
+    "assam_tea": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1b/Tea_leaves_at_a_plantation_in_Assam.jpg/800px-Tea_leaves_at_a_plantation_in_Assam.jpg",
+    "joha_rice": "https://images.unsplash.com/photo-1586201375761-83865001e31c?auto=format&fit=crop&w=500&q=60",
+    "bhut_jolokia": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6d/Bhut_Jolokia.jpg/500px-Bhut_Jolokia.jpg",
+    # Add your other crops here...
+    "default": "https://images.unsplash.com/photo-1592982537447-6f204c356e18?auto=format&fit=crop&w=500&q=60" # A nice generic farm picture
+}
 
 # Estimate base soil parameters based on general soil types in Assam
 soil_properties = {
@@ -15,3 +24,4 @@ season_rainfall = {
     "Post-Monsoon (Oct - Nov)": 80.0,
     "Winter (Dec - Feb)": 20.0
 }
+
