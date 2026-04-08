@@ -1,0 +1,6 @@
+streamlit==1.32.0
+pandas
+numpy
+scikit-learn
+requests
+python-dotenv
