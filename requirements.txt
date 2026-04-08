@@ -5,3 +5,4 @@ scikit-learn==1.7.2
 requests
 python-dotenv
 plotly
+fpdf2

@@ -13,6 +13,8 @@ import plotly.express as px
 import pandas as pd
 from PIL import Image
 from io import BytesIO
+from fpdf import FPDF
+import datetime
 import urllib3
 import urllib.parse
 from mappings import soil_properties, season_rainfall
@@ -76,6 +78,57 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 
+# ─── PDF Report Generator ─────────────────────────────────────────────────────
+
+def create_pdf_report(district, crop_name, confidence, temp, humidity, ph, rainfall, N, P, K):
+    """Generates a professional PDF report from the AI prediction."""
+    pdf = FPDF()
+    pdf.add_page()
+
+    # 1. Header
+    pdf.set_font("Helvetica", 'B', 20)
+    pdf.set_text_color(46, 139, 87)
+    pdf.cell(0, 15, "AI Crop Recommendation Report", ln=True, align='C')
+
+    pdf.ln(5)
+
+    # 2. General Info
+    pdf.set_font("Helvetica", size=12)
+    pdf.set_text_color(0, 0, 0)
+    pdf.cell(0, 10, f"Date Generated: {datetime.date.today().strftime('%B %d, %Y')}", ln=True)
+    pdf.cell(0, 10, f"Analyzed Location: {district.title()}, Assam", ln=True)
+
+    pdf.ln(5)
+
+    # 3. The AI Prediction
+    pdf.set_font("Helvetica", 'B', 14)
+    pdf.set_text_color(0, 100, 0)
+    pdf.cell(0, 10, f"Top Recommended Crop: {crop_name} ({confidence:.1f}% AI Confidence)", ln=True)
+
+    pdf.ln(5)
+
+    # 4. The Environmental Data Used
+    pdf.set_font("Helvetica", 'B', 12)
+    pdf.set_text_color(0, 0, 0)
+    pdf.cell(0, 10, "Environmental & Soil Data Analyzed:", ln=True)
+
+    pdf.set_font("Helvetica", size=12)
+    pdf.cell(0, 10, f"- Live Temperature: {temp} C", ln=True)
+    pdf.cell(0, 10, f"- Live Humidity: {humidity} %", ln=True)
+    pdf.cell(0, 10, f"- Expected Rainfall: {rainfall} mm", ln=True)
+    pdf.cell(0, 10, f"- Estimated Soil pH: {ph}", ln=True)
+    pdf.cell(0, 10, f"- Nitrogen (N): {N} | Phosphorus (P): {P} | Potassium (K): {K}", ln=True)
+
+    pdf.ln(15)
+
+    # 5. Footer
+    pdf.set_font("Helvetica", 'I', 10)
+    pdf.set_text_color(100, 100, 100)
+    pdf.cell(0, 10, "This report was generated automatically by the Assam Crop Recommendation System.", align='C')
+
+    return bytes(pdf.output())
+
+
 # ─── Image Fetching (Fixed for 49 crops) ─────────────────────────────────────
 
 _IMG_HEADERS = {
@@ -86,7 +139,6 @@ _IMG_HEADERS = {
     "Accept": "image/webp,image/apng,image/*,*/*;q=0.8",
 }
 
-# Keywords that indicate a non-photo result — book covers, diagrams, maps, etc.
 _SKIP_KEYWORDS = [
     "icon", "flag", "map", "logo", "diagram", "svg", "symbol",
     "coat", "blank", "book", "cover", "notebook", "paper",
@@ -99,11 +151,7 @@ _SKIP_KEYWORDS = [
 
 _VALID_EXTS = (".jpg", ".jpeg", ".png", ".webp")
 
-# ── Wikipedia article titles for all 49 crops ─────────────────────────────
-# Standard crops use their English Wikipedia page.
-# Assam-specific crops use the most relevant available article.
 _CROP_WIKI_TITLES = {
-    # Standard crops
     "rice":          "Rice",
     "wheat":         "Wheat",
     "maize":         "Maize",
@@ -130,39 +178,35 @@ _CROP_WIKI_TITLES = {
     "pigeonpeas":    "Pigeon_pea",
     "kidneybeans":   "Kidney_bean",
     "blackgram":     "Vigna_mungo",
-    # Assam-specific rice varieties
     "joha_rice":     "Joha_rice",
     "joha_rice72":   "Joha_rice",
     "bao_rice":      "Bao_rice",
     "bora_rice":     "Glutinous_rice",
     "chokuwa_rice":  "Chokuwa_rice",
     "komal_saul":    "Komal_saul",
-    "xaaj_rice":     "Xaj_(drink)",       # fermented rice — closest article
-    "apong_rice":    "Apong",              # rice beer — shows the grain
-    # Assam fruits & vegetables
+    "xaaj_rice":     "Xaj_(drink)",
+    "apong_rice":    "Apong",
     "bhut_jolokia":  "Bhut_jolokia",
     "kaji_nemu":     "Kaji_Nemu",
     "ou_tenga":      "Elephant_apple",
     "thekera":       "Garcinia_pedunculata",
-    "amlokhi":       "Phyllanthus_emblica",  # Indian gooseberry / amla
-    "bogori":        "Ziziphus_mauritiana",  # Indian jujube / ber
+    "amlokhi":       "Phyllanthus_emblica",
+    "bogori":        "Ziziphus_mauritiana",
     "leteku":        "Baccaurea_ramiflora",
     "jalpai":        "Elaeocarpus_floribundus",
     "areca_nut":     "Areca_nut",
     "betel_leaf":    "Betel",
     "kola_banana":   "Banana",
-    # Leafy greens & vegetables
-    "lai_xaak":      "Brassica_juncea",     # mustard greens
-    "kosu":          "Colocasia_esculenta", # taro
-    "dhekia_xaak":   "Diplazium_esculentum",# edible fern
-    "manimuni":      "Centella_asiatica",   # pennywort
+    "lai_xaak":      "Brassica_juncea",
+    "kosu":          "Colocasia_esculenta",
+    "dhekia_xaak":   "Diplazium_esculentum",
+    "manimuni":      "Centella_asiatica",
     "local_brinjal": "Brinjal",
     "local_pumpkin": "Pumpkin",
     "local_beans":   "Bean",
     "bamboo_shoot":  "Bamboo_shoot",
 }
 
-# ── Friendly display names for Assam-specific crops ───────────────────────
 _CROP_DISPLAY_NAMES = {
     "joha_rice":     "Joha Rice",
     "joha_rice72":   "Joha Rice (72)",
@@ -196,19 +240,16 @@ _CROP_DISPLAY_NAMES = {
 
 
 def get_display_name(crop_key: str) -> str:
-    """Return a human-friendly display name for any crop key."""
     if crop_key in _CROP_DISPLAY_NAMES:
         return _CROP_DISPLAY_NAMES[crop_key]
     return crop_key.replace("_", " ").title()
 
 
 def _get_image_bytes(url: str) -> bytes | None:
-    """Download and validate image bytes. Rejects tiny images (icons, thumbs)."""
     try:
         r = requests.get(url, headers=_IMG_HEADERS, timeout=10,
                          verify=False, allow_redirects=True)
         ct = r.headers.get("Content-Type", "")
-        # Must be an image AND at least 10 KB (filters icons/placeholders)
         if r.status_code == 200 and "image" in ct and len(r.content) > 10_000:
             return r.content
     except Exception:
@@ -217,7 +258,6 @@ def _get_image_bytes(url: str) -> bytes | None:
 
 
 def _url_is_clean(url: str) -> bool:
-    """Return True only if the URL looks like a real crop/plant photograph."""
     url_lower = url.lower()
     if not any(url_lower.endswith(ext) or (ext + "?") in url_lower
                for ext in _VALID_EXTS):
@@ -228,10 +268,6 @@ def _url_is_clean(url: str) -> bool:
 
 
 def _try_wikipedia_infobox(crop_key: str) -> bytes | None:
-    """
-    Fetch the main infobox image from the Wikipedia article for this crop.
-    Most reliable source — returns the canonical encyclopedia photo.
-    """
     title = _CROP_WIKI_TITLES.get(crop_key.lower())
     if not title:
         return None
@@ -258,10 +294,6 @@ def _try_wikipedia_infobox(crop_key: str) -> bytes | None:
 
 
 def _try_wikimedia_search(crop_name: str) -> bytes | None:
-    """
-    Search Wikimedia Commons with strict URL filtering.
-    Uses 'crop plant field farm' suffix to bias toward farm/nature photos.
-    """
     query = urllib.parse.quote(f"{crop_name} crop plant field")
     try:
         api = (
@@ -288,9 +320,6 @@ def _try_wikimedia_search(crop_name: str) -> bytes | None:
 
 
 def _make_placeholder_png(crop_name: str) -> bytes:
-    """
-    PIL-generated 800×600 styled card. Zero-network, always works.
-    """
     from PIL import ImageDraw, ImageFont
     W, H = 800, 600
     img  = Image.new("RGB", (W, H))
@@ -311,7 +340,7 @@ def _make_placeholder_png(crop_name: str) -> bytes:
         font_big = font_main = font_sub = ImageFont.load_default()
     draw.text((W // 2, H // 2 - 80), initials,  font=font_big,  fill=(255, 255, 255, 30), anchor="mm")
     draw.text((W // 2, H // 2 + 20), label,     font=font_main, fill=(255, 255, 255),     anchor="mm")
-    draw.text((W // 2, H // 2 + 90), "🌱  No photo available", font=font_sub, fill=(180, 220, 180), anchor="mm")
+    draw.text((W // 2, H // 2 + 90), "No photo available", font=font_sub, fill=(180, 220, 180), anchor="mm")
     buf = BytesIO()
     img.save(buf, format="PNG")
     return buf.getvalue()
@@ -319,26 +348,13 @@ def _make_placeholder_png(crop_name: str) -> bytes:
 
 @st.cache_data(ttl=86_400, show_spinner=False)
 def fetch_crop_image(crop_name: str) -> tuple[bytes, bool]:
-    """
-    Returns (image_bytes, is_real_photo).
-    Always returns valid image bytes — never None.
-
-    Priority:
-      1. Wikipedia infobox image  — exact article, most reliable
-      2. Wikimedia Commons search — broader, strictly filtered
-      3. PIL-generated placeholder — zero-network fallback
-    """
-    # Normalise key: "Bhut Jolokia" → "bhut_jolokia"
     crop_key = crop_name.lower().replace(" ", "_")
-
     img = _try_wikipedia_infobox(crop_key)
     if img:
         return img, True
-
     img = _try_wikimedia_search(crop_name)
     if img:
         return img, True
-
     return _make_placeholder_png(crop_name), False
 
 
@@ -353,63 +369,59 @@ def load_models():
 
 # ─── Crop Info for all 49 crops ───────────────────────────────────────────────
 CROP_INFO: dict[str, dict] = {
-    # Standard crops
-    "rice":          {"season": "Kharif (Jun–Nov)",   "water": "High",   "icon": "🌾"},
-    "wheat":         {"season": "Rabi (Nov–Apr)",      "water": "Medium", "icon": "🌿"},
+    "rice":          {"season": "Kharif (Jun-Nov)",   "water": "High",   "icon": "🌾"},
+    "wheat":         {"season": "Rabi (Nov-Apr)",      "water": "Medium", "icon": "🌿"},
     "maize":         {"season": "Kharif / Rabi",       "water": "Medium", "icon": "🌽"},
-    "jute":          {"season": "Kharif (Mar–Jul)",    "water": "High",   "icon": "🌱"},
+    "jute":          {"season": "Kharif (Mar-Jul)",    "water": "High",   "icon": "🌱"},
     "assam_tea":     {"season": "Year-round",          "water": "High",   "icon": "🍵"},
-    "mustard":       {"season": "Rabi (Oct–Mar)",      "water": "Low",    "icon": "🌼"},
+    "mustard":       {"season": "Rabi (Oct-Mar)",      "water": "Low",    "icon": "🌼"},
     "sugarcane":     {"season": "Year-round",          "water": "High",   "icon": "🎋"},
-    "cotton":        {"season": "Kharif (Apr–Nov)",    "water": "Medium", "icon": "☁️"},
+    "cotton":        {"season": "Kharif (Apr-Nov)",    "water": "Medium", "icon": "☁️"},
     "banana":        {"season": "Year-round",          "water": "Medium", "icon": "🍌"},
-    "mango":         {"season": "Summer (Mar–Jun)",    "water": "Low",    "icon": "🥭"},
-    "chickpea":      {"season": "Rabi (Oct–Mar)",      "water": "Low",    "icon": "🫘"},
-    "lentil":        {"season": "Rabi (Oct–Mar)",      "water": "Low",    "icon": "🫘"},
+    "mango":         {"season": "Summer (Mar-Jun)",    "water": "Low",    "icon": "🥭"},
+    "chickpea":      {"season": "Rabi (Oct-Mar)",      "water": "Low",    "icon": "🫘"},
+    "lentil":        {"season": "Rabi (Oct-Mar)",      "water": "Low",    "icon": "🫘"},
     "papaya":        {"season": "Year-round",          "water": "Medium", "icon": "🍈"},
     "coconut":       {"season": "Year-round",          "water": "High",   "icon": "🥥"},
     "pomegranate":   {"season": "Summer / Winter",     "water": "Low",    "icon": "🍎"},
-    "grapes":        {"season": "Winter (Oct–Feb)",    "water": "Medium", "icon": "🍇"},
-    "watermelon":    {"season": "Summer (Mar–Jun)",    "water": "Low",    "icon": "🍉"},
-    "muskmelon":     {"season": "Summer (Feb–May)",    "water": "Low",    "icon": "🍈"},
-    "orange":        {"season": "Winter (Dec–Feb)",    "water": "Medium", "icon": "🍊"},
-    "apple":         {"season": "Summer (Jun–Sep)",    "water": "Medium", "icon": "🍎"},
+    "grapes":        {"season": "Winter (Oct-Feb)",    "water": "Medium", "icon": "🍇"},
+    "watermelon":    {"season": "Summer (Mar-Jun)",    "water": "Low",    "icon": "🍉"},
+    "muskmelon":     {"season": "Summer (Feb-May)",    "water": "Low",    "icon": "🍈"},
+    "orange":        {"season": "Winter (Dec-Feb)",    "water": "Medium", "icon": "🍊"},
+    "apple":         {"season": "Summer (Jun-Sep)",    "water": "Medium", "icon": "🍎"},
     "mungbean":      {"season": "Kharif / Summer",     "water": "Low",    "icon": "🫘"},
-    "mothbeans":     {"season": "Kharif (Jun–Sep)",    "water": "Low",    "icon": "🫘"},
-    "pigeonpeas":    {"season": "Kharif (Jun–Nov)",    "water": "Low",    "icon": "🫘"},
-    "kidneybeans":   {"season": "Kharif (Jun–Sep)",    "water": "Medium", "icon": "🫘"},
+    "mothbeans":     {"season": "Kharif (Jun-Sep)",    "water": "Low",    "icon": "🫘"},
+    "pigeonpeas":    {"season": "Kharif (Jun-Nov)",    "water": "Low",    "icon": "🫘"},
+    "kidneybeans":   {"season": "Kharif (Jun-Sep)",    "water": "Medium", "icon": "🫘"},
     "blackgram":     {"season": "Kharif / Rabi",       "water": "Low",    "icon": "🫘"},
     "coffee":        {"season": "Year-round",          "water": "Medium", "icon": "☕"},
-    # Assam rice varieties
-    "joha_rice":     {"season": "Kharif (Jun–Nov)",   "water": "High",   "icon": "🌾"},
-    "joha_rice72":   {"season": "Kharif (Jun–Nov)",   "water": "High",   "icon": "🌾"},
-    "bao_rice":      {"season": "Kharif (Jun–Dec)",   "water": "High",   "icon": "🌾"},
-    "bora_rice":     {"season": "Kharif (Jun–Nov)",   "water": "High",   "icon": "🌾"},
-    "chokuwa_rice":  {"season": "Kharif (Jun–Nov)",   "water": "High",   "icon": "🌾"},
-    "komal_saul":    {"season": "Kharif (Jun–Nov)",   "water": "High",   "icon": "🌾"},
-    "xaaj_rice":     {"season": "Kharif (Jun–Nov)",   "water": "High",   "icon": "🌾"},
-    "apong_rice":    {"season": "Kharif (Jun–Nov)",   "water": "High",   "icon": "🌾"},
-    # Assam fruits
-    "bhut_jolokia":  {"season": "Kharif (Jul–Oct)",   "water": "Medium", "icon": "🌶️"},
+    "joha_rice":     {"season": "Kharif (Jun-Nov)",   "water": "High",   "icon": "🌾"},
+    "joha_rice72":   {"season": "Kharif (Jun-Nov)",   "water": "High",   "icon": "🌾"},
+    "bao_rice":      {"season": "Kharif (Jun-Dec)",   "water": "High",   "icon": "🌾"},
+    "bora_rice":     {"season": "Kharif (Jun-Nov)",   "water": "High",   "icon": "🌾"},
+    "chokuwa_rice":  {"season": "Kharif (Jun-Nov)",   "water": "High",   "icon": "🌾"},
+    "komal_saul":    {"season": "Kharif (Jun-Nov)",   "water": "High",   "icon": "🌾"},
+    "xaaj_rice":     {"season": "Kharif (Jun-Nov)",   "water": "High",   "icon": "🌾"},
+    "apong_rice":    {"season": "Kharif (Jun-Nov)",   "water": "High",   "icon": "🌾"},
+    "bhut_jolokia":  {"season": "Kharif (Jul-Oct)",   "water": "Medium", "icon": "🌶️"},
     "kaji_nemu":     {"season": "Year-round",          "water": "Medium", "icon": "🍋"},
-    "ou_tenga":      {"season": "Monsoon (Jun–Sep)",  "water": "Medium", "icon": "🍏"},
-    "thekera":       {"season": "Monsoon (Jun–Sep)",  "water": "Medium", "icon": "🍋"},
-    "amlokhi":       {"season": "Rabi (Oct–Feb)",     "water": "Low",    "icon": "🟢"},
-    "bogori":        {"season": "Winter (Oct–Jan)",   "water": "Low",    "icon": "🫐"},
-    "leteku":        {"season": "Summer (Apr–Jun)",   "water": "Medium", "icon": "🍇"},
-    "jalpai":        {"season": "Monsoon (Jul–Sep)",  "water": "Medium", "icon": "🫒"},
+    "ou_tenga":      {"season": "Monsoon (Jun-Sep)",  "water": "Medium", "icon": "🍏"},
+    "thekera":       {"season": "Monsoon (Jun-Sep)",  "water": "Medium", "icon": "🍋"},
+    "amlokhi":       {"season": "Rabi (Oct-Feb)",     "water": "Low",    "icon": "🟢"},
+    "bogori":        {"season": "Winter (Oct-Jan)",   "water": "Low",    "icon": "🫐"},
+    "leteku":        {"season": "Summer (Apr-Jun)",   "water": "Medium", "icon": "🍇"},
+    "jalpai":        {"season": "Monsoon (Jul-Sep)",  "water": "Medium", "icon": "🫒"},
     "areca_nut":     {"season": "Year-round",          "water": "High",   "icon": "🌴"},
     "betel_leaf":    {"season": "Year-round",          "water": "High",   "icon": "🍃"},
     "kola_banana":   {"season": "Year-round",          "water": "Medium", "icon": "🍌"},
-    # Assam leafy greens & vegetables
-    "lai_xaak":      {"season": "Rabi (Oct–Feb)",     "water": "Medium", "icon": "🥬"},
+    "lai_xaak":      {"season": "Rabi (Oct-Feb)",     "water": "Medium", "icon": "🥬"},
     "kosu":          {"season": "Year-round",          "water": "High",   "icon": "🌿"},
-    "dhekia_xaak":   {"season": "Monsoon (Jun–Sep)",  "water": "High",   "icon": "🌿"},
+    "dhekia_xaak":   {"season": "Monsoon (Jun-Sep)",  "water": "High",   "icon": "🌿"},
     "manimuni":      {"season": "Year-round",          "water": "Medium", "icon": "🌿"},
     "local_brinjal": {"season": "Year-round",          "water": "Medium", "icon": "🍆"},
-    "local_pumpkin": {"season": "Kharif (Jun–Oct)",   "water": "Medium", "icon": "🎃"},
+    "local_pumpkin": {"season": "Kharif (Jun-Oct)",   "water": "Medium", "icon": "🎃"},
     "local_beans":   {"season": "Kharif / Rabi",       "water": "Medium", "icon": "🫘"},
-    "bamboo_shoot":  {"season": "Monsoon (Jun–Aug)",  "water": "High",   "icon": "🎍"},
+    "bamboo_shoot":  {"season": "Monsoon (Jun-Aug)",  "water": "High",   "icon": "🎍"},
 }
 
 
@@ -527,11 +539,10 @@ if predict_btn:
 
         # ── Top Recommendation ────────────────────────────────────────────────
         best_crop   = top_n_crops[0]
-        best_label  = get_display_name(best_crop)        # ← uses Assam names
+        best_label  = get_display_name(best_crop)
         best_conf   = top_n_probs[0] * 100
         crop_info   = get_crop_info(best_crop)
 
-        # Pass the raw crop key so Wikipedia lookup works correctly
         image_data, is_real = fetch_crop_image(best_crop)
 
         st.markdown(f"""
@@ -576,7 +587,7 @@ if predict_btn:
 
         for i, col in enumerate(rec_cols[:top_n]):
             with col:
-                name      = get_display_name(top_n_crops[i])   # ← Assam names
+                name      = get_display_name(top_n_crops[i])
                 conf_pct  = top_n_probs[i] * 100
                 cinfo     = get_crop_info(top_n_crops[i])
                 rank_icon = ["🥇", "🥈", "🥉", "4️⃣", "5️⃣", "6️⃣", "7️⃣"][i]
@@ -701,6 +712,25 @@ if predict_btn:
             if st.button("🗑️ Clear History"):
                 st.session_state.history = []
                 st.rerun()
+
+        # ── PDF Report Export ─────────────────────────────────────────────────
+        st.write("### 🖨️ Export Results")
+        st.write("Download a printable summary of this analysis for field use.")
+
+        pdf_bytes = create_pdf_report(
+            district, best_label, best_conf,
+            temp, humidity, ph, rainfall, N, P, K
+        )
+
+        st.download_button(
+            label="📄 Download Official PDF Report",
+            data=pdf_bytes,
+            file_name=f"{district}_Crop_Report_{datetime.date.today()}.pdf",
+            mime="application/pdf",
+            use_container_width=True,
+        )
+
+        st.divider()
 
         # ── Input Summary ─────────────────────────────────────────────────────
         with st.expander("🔍 View full input summary used for this prediction"):
