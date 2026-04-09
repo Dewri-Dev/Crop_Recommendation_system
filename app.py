@@ -194,7 +194,79 @@ def T(key: str) -> str:
     lang = st.session_state.get("lang", "en")
     return UI_TEXT.get(lang, UI_TEXT["en"]).get(key, key)
 
+# ═══════════════════════════════════════════════════════════════════════════════
+# CAMERA CROP RECOGNITION
+# ═══════════════════════════════════════════════════════════════════════════════
 
+import anthropic, base64, json, re
+import streamlit.components.v1 as components
+
+def identify_crop_from_image(img_bytes: bytes) -> dict:
+    client = anthropic.Anthropic()
+    b64 = base64.standard_b64encode(img_bytes).decode()
+    resp = client.messages.create(
+        model="claude-sonnet-4-20250514",
+        max_tokens=300,
+        messages=[{
+            "role": "user",
+            "content": [
+                {"type": "image", "source": {"type": "base64", "media_type": "image/jpeg", "data": b64}},
+                {"type": "text", "text": (
+                    "You are an agricultural expert for Assam, India. "
+                    "Identify the crop in this image. Also check for visible disease. "
+                    "Reply ONLY in JSON: "
+                    "{\"crop_key\": \"rice\", \"display_name\": \"Rice\", "
+                    "\"disease\": null, \"confidence\": 91, \"notes\": \"Healthy plant\"}"
+                )}
+            ]
+        }]
+    )
+    raw = resp.content[0].text
+    clean = re.sub(r"```json|```", "", raw).strip()
+    return json.loads(clean)
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# SPEAK ALOUD (TTS)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+def build_tts_summary(crop_name, fert, market, lang="en") -> str:
+    if lang == "as":
+        text = (f"শীৰ্ষ শস্য: {crop_name}। "
+                f"ইউৰিয়া {fert['urea_kg']} কেজি, DAP {fert['dap_kg']} কেজি প্ৰয়োগ কৰক। "
+                f"অনুমানিত লাভ প্ৰতি হেক্টৰত {market['net_profit']:,} টকা।")
+    else:
+        text = (f"Top recommended crop: {crop_name}. "
+                f"Apply {fert['urea_kg']} kg Urea, {fert['dap_kg']} kg DAP, "
+                f"{fert['mop_kg']} kg MOP per hectare. "
+                f"Estimated net profit: Rupees {market['net_profit']:,} per hectare.")
+    return text
+
+
+def render_tts_player(text: str, lang: str = "en") -> None:
+    lang_code = "as-IN" if lang == "as" else "en-IN"
+    escaped = text.replace("'", "\\'").replace("\n", " ")
+    html = f"""
+    <div style="display:flex;align-items:center;gap:10px;padding:.6rem 1rem;
+         background:rgba(0,0,0,.04);border-radius:8px;font-size:13px;">
+      <button onclick="speak()" style="padding:6px 14px;border-radius:6px;
+              border:1px solid #aaa;cursor:pointer;background:white;">&#9654; Play</button>
+      <button onclick="window.speechSynthesis.cancel()" style="padding:6px 14px;
+              border-radius:6px;border:1px solid #aaa;cursor:pointer;background:white;">&#9632; Stop</button>
+      <span style="opacity:.6;flex:1;overflow:hidden;white-space:nowrap;
+                   text-overflow:ellipsis;">{text[:80]}…</span>
+    </div>
+    <script>
+    function speak() {{
+      window.speechSynthesis.cancel();
+      const u = new SpeechSynthesisUtterance('{escaped}');
+      u.lang = '{lang_code}';
+      u.rate = 0.9;
+      window.speechSynthesis.speak(u);
+    }}
+    </script>
+    """
+    components.html(html, height=60)
 # ═══════════════════════════════════════════════════════════════════════════════
 # UPGRADE 6B — FERTILIZER PRESCRIPTION ENGINE
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -408,16 +480,20 @@ def create_pdf_report(district, crop_name, confidence, temp, humidity, ph,
 
     # ── Font setup ────────────────────────────────────────────────────────────
     # Assamese needs a Unicode TTF font. English can use built-in Helvetica.
+    # ── Font setup ────────────────────────────────────────────────────────────
     if lang == "as":
         font_path = _ensure_unicode_font()
         pdf.add_font("NotoSans", style="",  fname=font_path)
-        pdf.add_font("NotoSans", style="B", fname=font_path)  # fpdf2 bold = same TTF, weight handled internally
+        pdf.add_font("NotoSans", style="B", fname=font_path)
         FONT_NORMAL = "NotoSans"
         FONT_BOLD   = "NotoSans"
     else:
-        FONT_NORMAL = "Helvetica"
-        FONT_BOLD   = "Helvetica"
-
+        font_path = "DejaVuSans.ttf"
+        pdf.add_font("DejaVu", "", font_path, uni=True)
+        pdf.add_font("DejaVu", "B", font_path, uni=True)
+        FONT_NORMAL = "DejaVu"
+        FONT_BOLD   = "DejaVu"
+        
     def set_normal(size=12):
         pdf.set_font(FONT_NORMAL, size=size)
 
@@ -753,6 +829,28 @@ with st.sidebar:
     )
 
     st.markdown("---")
+    st.markdown("---")
+
+    # ── Camera Crop Recognition ──────────────────────────────────────────────
+    st.markdown("### 📷 Identify Crop from Photo")
+    cam_img = st.camera_input("Take a photo") or st.file_uploader(
+        "Or upload image", type=["jpg","jpeg","png","webp"], key="cam_upload")
+
+    if cam_img:
+        with st.spinner("Identifying crop..."):
+            try:
+                result = identify_crop_from_image(cam_img.getvalue())
+                st.success(f"Detected: **{result['display_name']}** ({result['confidence']}% confidence)")
+                if result.get("disease"):
+                    st.warning(f"⚠️ Disease detected: {result['disease']}\n\n{result.get('notes','')}")
+                else:
+                    st.info(f"📝 {result.get('notes', 'No disease found.')}")
+                st.session_state["detected_crop"] = result["crop_key"]
+            except Exception as e:
+                st.error(f"Could not identify crop: {e}")
+
+    st.markdown("---")
+    st.caption(T("caption"))
 
     st.markdown(f'<div class="sidebar-section"><h4>{T("location_hdr")}</h4>', unsafe_allow_html=True)
     district = st.text_input(T("district"), value="Guwahati",
@@ -921,6 +1019,13 @@ if predict_btn:
             f"{T('hist_align')}"
         )
         st.progress(float(top_n_probs[0]), text=f"{T('confidence')}: **{best_conf:.1f}%**")
+
+        # ── Speak Aloud ──────────────────────────────────────────────────────
+        st.markdown("🔊 **Listen to your recommendation**")
+        fert_preview = calculate_fertilizer_prescription(best_crop, N, P, K)
+        market_preview = get_market_forecast(best_crop)
+        tts_text = build_tts_summary(best_label, fert_preview, market_preview, lang=st.session_state.get("lang", "en"))
+        render_tts_player(tts_text, lang=st.session_state.get("lang", "en"))
 
     st.divider()
 
