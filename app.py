@@ -199,10 +199,13 @@ def T(key: str) -> str:
 # ═══════════════════════════════════════════════════════════════════════════════
 
 import anthropic, base64, json, re
+import streamlit as st
 import streamlit.components.v1 as components
 
 def identify_crop_from_image(img_bytes: bytes) -> dict:
-    client = anthropic.Anthropic()
+    client = anthropic.Anthropic(
+        api_key=st.secrets["ANTHROPIC_API_KEY"]
+    )
     b64 = base64.standard_b64encode(img_bytes).decode()
     resp = client.messages.create(
         model="claude-sonnet-4-20250514",
@@ -493,7 +496,7 @@ def create_pdf_report(district, crop_name, confidence, temp, humidity, ph,
         pdf.add_font("DejaVu", "B", font_path, uni=True)
         FONT_NORMAL = "DejaVu"
         FONT_BOLD   = "DejaVu"
-        
+
     def set_normal(size=12):
         pdf.set_font(FONT_NORMAL, size=size)
 
