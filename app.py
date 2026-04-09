@@ -198,35 +198,43 @@ def T(key: str) -> str:
 # CAMERA CROP RECOGNITION
 # ═══════════════════════════════════════════════════════════════════════════════
 
-import anthropic, base64, json, re
+import google.generativeai as genai, base64, json, re
 import streamlit as st
 import streamlit.components.v1 as components
 
 def identify_crop_from_image(img_bytes: bytes) -> dict:
-    client = anthropic.Anthropic(
-        api_key=st.secrets["ANTHROPIC_API_KEY"]
-    )
-    b64 = base64.standard_b64encode(img_bytes).decode()
-    resp = client.messages.create(
-        model="claude-sonnet-4-20250514",
-        max_tokens=300,
-        messages=[{
-            "role": "user",
-            "content": [
-                {"type": "image", "source": {"type": "base64", "media_type": "image/jpeg", "data": b64}},
-                {"type": "text", "text": (
-                    "You are an agricultural expert for Assam, India. "
-                    "Identify the crop in this image. Also check for visible disease. "
-                    "Reply ONLY in JSON: "
-                    "{\"crop_key\": \"rice\", \"display_name\": \"Rice\", "
-                    "\"disease\": null, \"confidence\": 91, \"notes\": \"Healthy plant\"}"
-                )}
-            ]
-        }]
-    )
-    raw = resp.content[0].text
-    clean = re.sub(r"```json|```", "", raw).strip()
-    return json.loads(clean)
+    try:
+        # Configure Gemini
+        genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
+        model = genai.GenerativeModel("gemini-1.5-flash")
+
+        # Send image + prompt
+        response = model.generate_content([
+            {
+                "mime_type": "image/jpeg",
+                "data": img_bytes
+            },
+            """You are an agricultural expert for Assam, India.
+Identify the crop in this image and check for disease.
+
+Reply ONLY in JSON:
+{"crop_key": "rice", "display_name": "Rice", "disease": null, "confidence": 90, "notes": "Healthy plant"}"""
+        ])
+
+        # Clean response
+        raw = response.text
+        clean = re.sub(r"```json|```", "", raw).strip()
+
+        return json.loads(clean)
+
+    except Exception as e:
+        return {
+            "crop_key": "unknown",
+            "display_name": "Unknown",
+            "disease": None,
+            "confidence": 0,
+            "notes": str(e)
+        }
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
