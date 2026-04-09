@@ -206,7 +206,7 @@ def identify_crop_from_image(img_bytes: bytes) -> dict:
     try:
         # Configure Gemini
         genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
-        model = genai.GenerativeModel("gemini-1.5-flash")
+        model = genai.GenerativeModel("gemini-1.5-flash-latest")
 
         # Send image + prompt
         response = model.generate_content([
