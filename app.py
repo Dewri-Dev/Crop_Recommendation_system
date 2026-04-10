@@ -1,9 +1,15 @@
 """
 Assam Crop Recommendation System
 God-Tier Edition: Language Toggle + Fertilizer Prescription + Market Forecaster
++ Camera Recognition + Speak Aloud (TTS)
 """
 
+# ═══════════════════════════════════════════════════════════════════════════════
+# IMPORTS
+# ═══════════════════════════════════════════════════════════════════════════════
+
 import streamlit as st
+import streamlit.components.v1 as components
 import requests
 import pickle
 import numpy as np
@@ -16,6 +22,14 @@ from fpdf import FPDF
 import datetime
 import urllib3
 import urllib.parse
+import base64
+import json
+import re
+import os
+import urllib.request
+
+from huggingface_hub import InferenceClient
+
 from mappings import soil_properties, season_rainfall
 from weather import get_live_weather
 
@@ -74,7 +88,7 @@ UI_TEXT = {
         "lang_toggle":     "🌐 Language",
         "location_hdr":    "📍 Location",
         "input_mode_hdr":  "⚙️ Input Mode",
-        "caption":         "Built for Assam farmers · v3.0\nPowered by Random Forest ML",
+        "caption":         "Built for Assam farmers · v3.1\nPowered by Random Forest ML",
         "fetching":        "Fetching live weather data and running AI analysis…",
         "analysis_done":   "✅ Analysis complete!",
         "model_not_found": "⚠️ Model files not found! Run `train_model.ipynb` first.",
@@ -110,6 +124,15 @@ UI_TEXT = {
         "kg_per_ha":       "kg/hectare",
         "no_deficit":      "No amendment needed",
         "per_ha":          "per hectare",
+        "cam_header":      "📷 Identify Crop from Photo",
+        "cam_take":        "Take a photo",
+        "cam_upload":      "Or upload image",
+        "cam_detecting":   "Identifying crop from image…",
+        "cam_detected":    "Detected",
+        "cam_no_disease":  "No disease found.",
+        "cam_error":       "Could not identify crop",
+        "cam_pre_filled":  "📷 Camera detected",
+        "listen_btn":      "🔊 Listen to your recommendation",
     },
     "as": {
         "title":           "🌾 অসম শস্য পৰামৰ্শ প্ৰণালী",
@@ -151,7 +174,7 @@ UI_TEXT = {
         "lang_toggle":     "🌐 ভাষা",
         "location_hdr":    "📍 স্থান",
         "input_mode_hdr":  "⚙️ ইনপুট মোড",
-        "caption":         "অসমৰ কৃষকৰ বাবে নিৰ্মিত · v3.0\nRandom Forest ML দ্বাৰা চালিত",
+        "caption":         "অসমৰ কৃষকৰ বাবে নিৰ্মিত · v3.1\nRandom Forest ML দ্বাৰা চালিত",
         "fetching":        "লাইভ বতৰৰ ডেটা আনি AI বিশ্লেষণ চলাইছে…",
         "analysis_done":   "✅ বিশ্লেষণ সম্পূৰ্ণ!",
         "model_not_found": "⚠️ মডেল ফাইল পোৱা নগ'ল! প্ৰথমে `train_model.ipynb` চলাওক।",
@@ -187,6 +210,15 @@ UI_TEXT = {
         "kg_per_ha":       "কেজি/হেক্টৰ",
         "no_deficit":      "সংশোধনৰ প্ৰয়োজন নাই",
         "per_ha":          "প্ৰতি হেক্টৰ",
+        "cam_header":      "📷 ফটোৰ পৰা শস্য চিনাক্ত কৰক",
+        "cam_take":        "ফটো তোলক",
+        "cam_upload":      "বা ছবি আপলোড কৰক",
+        "cam_detecting":   "ছবিৰ পৰা শস্য চিনাক্ত কৰা হৈছে…",
+        "cam_detected":    "চিনাক্ত হৈছে",
+        "cam_no_disease":  "কোনো ৰোগ পোৱা নগ'ল।",
+        "cam_error":       "শস্য চিনাক্ত কৰিব পৰা নগ'ল",
+        "cam_pre_filled":  "📷 কেমেৰাই চিনাক্ত কৰিছে",
+        "listen_btn":      "🔊 পৰামৰ্শ শুনক",
     }
 }
 
@@ -194,96 +226,251 @@ def T(key: str) -> str:
     lang = st.session_state.get("lang", "en")
     return UI_TEXT.get(lang, UI_TEXT["en"]).get(key, key)
 
+
 # ═══════════════════════════════════════════════════════════════════════════════
-# CAMERA CROP RECOGNITION
+# CAMERA CROP RECOGNITION  (Gemini Vision)
 # ═══════════════════════════════════════════════════════════════════════════════
 
-import google.generativeai as genai, base64, json, re
-import streamlit as st
-import streamlit.components.v1 as components
+# All valid crop keys in this system — passed to Gemini so it returns a matching key
+_ALL_CROP_KEYS = [
+    "rice", "wheat", "maize", "jute", "assam_tea", "mustard", "sugarcane",
+    "cotton", "banana", "mango", "chickpea", "lentil", "papaya", "coconut",
+    "pomegranate", "grapes", "watermelon", "muskmelon", "orange", "apple",
+    "mungbean", "mothbeans", "pigeonpeas", "kidneybeans", "blackgram", "coffee",
+    "joha_rice", "joha_rice72", "bao_rice", "bora_rice", "chokuwa_rice",
+    "komal_saul", "xaaj_rice", "apong_rice", "bhut_jolokia", "kaji_nemu",
+    "ou_tenga", "thekera", "amlokhi", "bogori", "leteku", "jalpai",
+    "areca_nut", "betel_leaf", "kola_banana", "lai_xaak", "kosu",
+    "dhekia_xaak", "manimuni", "local_brinjal", "local_pumpkin",
+    "local_beans", "bamboo_shoot",
+]
 
+# Simple fuzzy fallback: if Gemini returns e.g. "glutinous_rice" map to known key
+_CROP_KEY_ALIASES = {
+    "glutinous_rice": "bora_rice",
+    "sticky_rice":    "bora_rice",
+    "deepwater_rice": "bao_rice",
+    "boro_rice":      "bao_rice",
+    "green_chili":    "bhut_jolokia",
+    "ghost_pepper":   "bhut_jolokia",
+    "lemon":          "kaji_nemu",
+    "citrus":         "kaji_nemu",
+    "lichi":          "leteku",
+    "litchi":         "leteku",
+    "taro":           "kosu",
+    "colocasia":      "kosu",
+    "fern":           "dhekia_xaak",
+    "pennywort":      "manimuni",
+    "brinjal":        "local_brinjal",
+    "eggplant":       "local_brinjal",
+    "pumpkin":        "local_pumpkin",
+    "beans":          "local_beans",
+    "bamboo":         "bamboo_shoot",
+    "areca":          "areca_nut",
+    "betel":          "betel_leaf",
+    "tea":            "assam_tea",
+}
+
+def _detect_mime(img_bytes: bytes) -> str:
+    """Detect image MIME type from magic bytes."""
+    if img_bytes[:4] == b'\x89PNG':
+        return "image/png"
+    if img_bytes[:4] in (b'\xff\xd8\xff\xe0', b'\xff\xd8\xff\xe1', b'\xff\xd8\xff\xdb'):
+        return "image/jpeg"
+    if img_bytes[:4] == b'RIFF' and img_bytes[8:12] == b'WEBP':
+        return "image/webp"
+    return "image/jpeg"  # safe default
+
+def _normalise_crop_key(raw_key: str) -> str:
+    """Map Gemini's returned key to a known system key."""
+    k = raw_key.lower().strip().replace(" ", "_")
+    if k in _ALL_CROP_KEYS:
+        return k
+    if k in _CROP_KEY_ALIASES:
+        return _CROP_KEY_ALIASES[k]
+    # Partial match — find longest key that is a substring of k or vice-versa
+    for known in _ALL_CROP_KEYS:
+        if known in k or k in known:
+            return known
+    return "rice"  # safe fallback
+
+@st.cache_data(ttl=3600, show_spinner=False)
 def identify_crop_from_image(img_bytes: bytes) -> dict:
     try:
-        # Configure Gemini
-        genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
-        model = genai.GenerativeModel("gemini-1.5-flash-latest")
+        # ── Resize image before sending to avoid connection drops ────────────
+        from PIL import Image as PILImage
+        import io
+        img_pil = PILImage.open(io.BytesIO(img_bytes))
+        img_pil = img_pil.convert("RGB")
+        # Resize to max 512px on longest side
+        img_pil.thumbnail((512, 512), PILImage.LANCZOS)
+        buf = io.BytesIO()
+        img_pil.save(buf, format="JPEG", quality=75)
+        img_bytes = buf.getvalue()
+        # ─────────────────────────────────────────────────────────────────────
 
-        # Send image + prompt
-        response = model.generate_content([
-            {
-                "mime_type": "image/jpeg",
-                "data": img_bytes
-            },
-            """You are an agricultural expert for Assam, India.
-Identify the crop in this image and check for disease.
+        API_URL = "https://api-inference.huggingface.co/models/Salesforce/blip-image-captioning-large"
+        headers = {"Authorization": f"Bearer {st.secrets['HF_TOKEN']}"}
 
-Reply ONLY in JSON:
-{"crop_key": "rice", "display_name": "Rice", "disease": null, "confidence": 90, "notes": "Healthy plant"}"""
-        ])
+        caption   = ""
+        last_error = ""
+        for attempt in range(3):
+            try:
+                response = requests.post(
+                    API_URL,
+                    headers=headers,
+                    data=img_bytes,
+                    timeout=30,
+                    stream=False,
+                )
+                if response.status_code == 503:
+                    import time
+                    time.sleep(5)
+                    continue
+                if response.status_code == 200:
+                    result  = response.json()
+                    caption = result[0]["generated_text"].lower() if isinstance(result, list) else ""
+                    break
+                else:
+                    last_error = f"HTTP {response.status_code}: {response.text[:200]}"
+            except Exception as e:
+                last_error = str(e)
+                import time
+                time.sleep(2)
+                continue
 
-        # Clean response
-        raw = response.text
-        clean = re.sub(r"```json|```", "", raw).strip()
+        if not caption:
+            API_URL2 = "https://api-inference.huggingface.co/models/Salesforce/blip-image-captioning-base"
+            try:
+                r2 = requests.post(API_URL2, headers=headers, data=img_bytes, timeout=20, stream=False)
+                if r2.status_code == 200:
+                    result2 = r2.json()
+                    caption = result2[0]["generated_text"].lower() if isinstance(result2, list) else ""
+            except Exception:
+                pass
 
-        return json.loads(clean)
+        if not caption:
+            return {
+                "crop_key": "unknown", "display_name": "Unknown",
+                "disease": None, "confidence": 0,
+                "notes": f"Could not reach HuggingFace API. {last_error}",
+            }
+
+        matched_key = "rice"
+        for key in _ALL_CROP_KEYS:
+            if key.replace("_", " ") in caption or key in caption:
+                matched_key = key
+                break
+        for key, display in _CROP_DISPLAY_NAMES.items():
+            if display.lower().split("(")[0].strip() in caption:
+                matched_key = key
+                break
+
+        disease_words = ["disease","yellow","wilt","rot","blight","spot","damage","infected","pest"]
+        disease_found = next((w for w in disease_words if w in caption), None)
+
+        return {
+            "crop_key":     matched_key,
+            "display_name": get_display_name(matched_key),
+            "disease":      f"Possible {disease_found}" if disease_found else None,
+            "confidence":   75,
+            "notes":        f"Detected from image: {caption}",
+        }
 
     except Exception as e:
         return {
-            "crop_key": "unknown",
-            "display_name": "Unknown",
-            "disease": None,
-            "confidence": 0,
-            "notes": str(e)
+            "crop_key": "unknown", "display_name": "Unknown",
+            "disease": None, "confidence": 0,
+            "notes": f"Error: {str(e)}",
         }
-
-
 # ═══════════════════════════════════════════════════════════════════════════════
-# SPEAK ALOUD (TTS)
+# SPEAK ALOUD (TTS)  — Browser SpeechSynthesis, no API key needed
 # ═══════════════════════════════════════════════════════════════════════════════
 
-def build_tts_summary(crop_name, fert, market, lang="en") -> str:
+def build_tts_summary(crop_name: str, fert: dict, market: dict, lang: str = "en") -> str:
     if lang == "as":
-        text = (f"শীৰ্ষ শস্য: {crop_name}। "
-                f"ইউৰিয়া {fert['urea_kg']} কেজি, DAP {fert['dap_kg']} কেজি প্ৰয়োগ কৰক। "
-                f"অনুমানিত লাভ প্ৰতি হেক্টৰত {market['net_profit']:,} টকা।")
+        return (
+            f"শীৰ্ষ পৰামৰ্শিত শস্য: {crop_name}। "
+            f"প্ৰতি হেক্টৰত ইউৰিয়া {fert['urea_kg']} কেজি, "
+            f"DAP {fert['dap_kg']} কেজি, MOP {fert['mop_kg']} কেজি প্ৰয়োগ কৰক। "
+            f"অনুমানিত নিট লাভ প্ৰতি হেক্টৰত {market['net_profit']:,} টকা। "
+            f"বিনিয়োগৰ লাভ: {market['roi_pct']} শতাংশ।"
+        )
     else:
-        text = (f"Top recommended crop: {crop_name}. "
-                f"Apply {fert['urea_kg']} kg Urea, {fert['dap_kg']} kg DAP, "
-                f"{fert['mop_kg']} kg MOP per hectare. "
-                f"Estimated net profit: Rupees {market['net_profit']:,} per hectare.")
-    return text
+        return (
+            f"Top recommended crop: {crop_name}. "
+            f"Apply {fert['urea_kg']} kg Urea, {fert['dap_kg']} kg DAP, "
+            f"and {fert['mop_kg']} kg MOP per hectare. "
+            f"Estimated net profit is Rupees {market['net_profit']:,} per hectare. "
+            f"Return on investment: {market['roi_pct']} percent."
+        )
 
 
 def render_tts_player(text: str, lang: str = "en") -> None:
-    lang_code = "as-IN" if lang == "as" else "en-IN"
-    escaped = text.replace("'", "\\'").replace("\n", " ")
-    html = f"""
-    <div style="display:flex;align-items:center;gap:10px;padding:.6rem 1rem;
-         background:rgba(0,0,0,.04);border-radius:8px;font-size:13px;">
-      <button onclick="speak()" style="padding:6px 14px;border-radius:6px;
-              border:1px solid #aaa;cursor:pointer;background:white;">&#9654; Play</button>
-      <button onclick="window.speechSynthesis.cancel()" style="padding:6px 14px;
-              border-radius:6px;border:1px solid #aaa;cursor:pointer;background:white;">&#9632; Stop</button>
-      <span style="opacity:.6;flex:1;overflow:hidden;white-space:nowrap;
-                   text-overflow:ellipsis;">{text[:80]}…</span>
-    </div>
-    <script>
-    function speak() {{
-      window.speechSynthesis.cancel();
-      const u = new SpeechSynthesisUtterance('{escaped}');
-      u.lang = '{lang_code}';
-      u.rate = 0.9;
-      window.speechSynthesis.speak(u);
-    }}
-    </script>
     """
-    components.html(html, height=60)
+    Renders a Play / Stop audio bar using the browser's built-in SpeechSynthesis API.
+    Falls back gracefully if as-IN voice is unavailable.
+    """
+    lang_code   = "as-IN" if lang == "as" else "en-IN"
+    fallback    = "en-IN"
+    escaped     = text.replace("'", "\\'").replace('"', '\\"').replace("\n", " ")
+    preview     = text[:90] + "…" if len(text) > 90 else text
+
+    html = f"""
+<div style="display:flex;align-items:center;gap:10px;padding:.65rem 1rem;
+     background:rgba(46,139,87,.08);border:1px solid rgba(46,139,87,.2);
+     border-radius:10px;font-size:13px;font-family:sans-serif;">
+  <button id="tts-play" onclick="ttsPlay()" title="Play"
+    style="min-width:36px;height:36px;border-radius:50%;border:1px solid #2d6a4f;
+           background:#2d6a4f;color:white;cursor:pointer;font-size:14px;
+           display:flex;align-items:center;justify-content:center;">&#9654;</button>
+  <button id="tts-stop" onclick="ttsStop()" title="Stop"
+    style="min-width:36px;height:36px;border-radius:50%;border:1px solid #aaa;
+           background:white;color:#555;cursor:pointer;font-size:14px;
+           display:flex;align-items:center;justify-content:center;">&#9632;</button>
+  <span style="flex:1;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;
+               color:#555;">{preview}</span>
+</div>
+<script>
+(function() {{
+  var TTS_TEXT = '{escaped}';
+  var LANG     = '{lang_code}';
+  var FALLBACK = '{fallback}';
+
+  function pickVoice(lang) {{
+    var voices = window.speechSynthesis.getVoices();
+    // exact match first
+    for (var v of voices) {{ if (v.lang === lang) return v; }}
+    // prefix match (e.g. as vs as-IN)
+    var prefix = lang.split('-')[0];
+    for (var v of voices) {{ if (v.lang.startsWith(prefix)) return v; }}
+    return null;
+  }}
+
+  window.ttsPlay = function() {{
+    window.speechSynthesis.cancel();
+    var u    = new SpeechSynthesisUtterance(TTS_TEXT);
+    var v    = pickVoice(LANG) || pickVoice(FALLBACK);
+    if (v) u.voice = v;
+    u.lang   = v ? v.lang : FALLBACK;
+    u.rate   = 0.88;
+    u.pitch  = 1.0;
+    window.speechSynthesis.speak(u);
+  }};
+
+  window.ttsStop = function() {{
+    window.speechSynthesis.cancel();
+  }};
+}})();
+</script>
+"""
+    components.html(html, height=62)
+
+
 # ═══════════════════════════════════════════════════════════════════════════════
 # UPGRADE 6B — FERTILIZER PRESCRIPTION ENGINE
 # ═══════════════════════════════════════════════════════════════════════════════
 
-# Optimal NPK requirements per crop (kg/hectare)
-# Values sourced from ICAR & Assam Agriculture Department recommendations
 CROP_NPK_REQUIREMENTS: dict[str, dict] = {
     "rice":          {"N": 80,  "P": 40,  "K": 40},
     "wheat":         {"N": 120, "P": 60,  "K": 40},
@@ -340,46 +527,32 @@ CROP_NPK_REQUIREMENTS: dict[str, dict] = {
     "bamboo_shoot":  {"N": 60,  "P": 30,  "K": 40},
 }
 
-# Fertilizer conversion factors (kg of fertilizer to supply 1 kg of nutrient)
-# Urea = 46% N,  DAP = 18% N + 46% P,  MOP = 60% K
-UREA_FACTOR = 1 / 0.46   # kg Urea per kg N
-DAP_N_FACTOR = 0.18       # kg N per kg DAP
-DAP_P_FACTOR = 1 / 0.46  # kg DAP per kg P
-MOP_FACTOR   = 1 / 0.60  # kg MOP per kg K
+UREA_FACTOR  = 1 / 0.46
+DAP_N_FACTOR = 0.18
+DAP_P_FACTOR = 1 / 0.46
+MOP_FACTOR   = 1 / 0.60
 
-def calculate_fertilizer_prescription(crop_key: str, actual_N: float, actual_P: float, actual_K: float) -> dict:
-    """
-    Returns dict with deficit values and fertilizer amounts in kg/hectare.
-    Uses standard agronomic formula:
-      - P deficit → apply DAP first (it also supplies some N)
-      - Remaining N deficit → apply Urea
-      - K deficit → apply MOP
-    """
-    req = CROP_NPK_REQUIREMENTS.get(crop_key.lower(),
-                                    {"N": 80, "P": 40, "K": 40})
+def calculate_fertilizer_prescription(crop_key: str, actual_N: float,
+                                       actual_P: float, actual_K: float) -> dict:
+    req       = CROP_NPK_REQUIREMENTS.get(crop_key.lower(), {"N": 80, "P": 40, "K": 40})
     deficit_N = max(0, req["N"] - actual_N)
     deficit_P = max(0, req["P"] - actual_P)
     deficit_K = max(0, req["K"] - actual_K)
 
-    # Step 1: DAP to cover P deficit (also provides some N)
     dap_kg      = deficit_P * DAP_P_FACTOR
     n_from_dap  = dap_kg * DAP_N_FACTOR
     remaining_N = max(0, deficit_N - n_from_dap)
-
-    # Step 2: Urea to cover remaining N
-    urea_kg = remaining_N * UREA_FACTOR
-
-    # Step 3: MOP for K
-    mop_kg = deficit_K * MOP_FACTOR
+    urea_kg     = remaining_N * UREA_FACTOR
+    mop_kg      = deficit_K * MOP_FACTOR
 
     return {
-        "required":   req,
-        "deficit_N":  round(deficit_N),
-        "deficit_P":  round(deficit_P),
-        "deficit_K":  round(deficit_K),
-        "urea_kg":    round(urea_kg),
-        "dap_kg":     round(dap_kg),
-        "mop_kg":     round(mop_kg),
+        "required":    req,
+        "deficit_N":   round(deficit_N),
+        "deficit_P":   round(deficit_P),
+        "deficit_K":   round(deficit_K),
+        "urea_kg":     round(urea_kg),
+        "dap_kg":      round(dap_kg),
+        "mop_kg":      round(mop_kg),
         "all_optimal": deficit_N == 0 and deficit_P == 0 and deficit_K == 0,
     }
 
@@ -388,91 +561,82 @@ def calculate_fertilizer_prescription(crop_key: str, actual_N: float, actual_P: 
 # UPGRADE 6C — MARKET & ECONOMICS FORECASTER
 # ═══════════════════════════════════════════════════════════════════════════════
 
-# Assam Mandi average prices (INR per quintal = 100 kg)
-# Source: Agmarknet / data.gov.in historical averages for Assam (2024-25)
-# Yield in quintals per hectare (ICAR Assam averages)
 MARKET_DATA: dict[str, dict] = {
-    "rice":          {"price_per_q": 2200, "yield_q_ha": 25,  "input_cost": 25000},
-    "wheat":         {"price_per_q": 2275, "yield_q_ha": 30,  "input_cost": 22000},
-    "maize":         {"price_per_q": 1850, "yield_q_ha": 35,  "input_cost": 18000},
-    "jute":          {"price_per_q": 5500, "yield_q_ha": 20,  "input_cost": 20000},
-    "assam_tea":     {"price_per_q": 15000,"yield_q_ha": 18,  "input_cost": 80000},
-    "mustard":       {"price_per_q": 5650, "yield_q_ha": 10,  "input_cost": 15000},
-    "sugarcane":     {"price_per_q": 315,  "yield_q_ha": 600, "input_cost": 40000},
-    "cotton":        {"price_per_q": 6600, "yield_q_ha": 15,  "input_cost": 35000},
-    "banana":        {"price_per_q": 1500, "yield_q_ha": 200, "input_cost": 45000},
-    "mango":         {"price_per_q": 3000, "yield_q_ha": 80,  "input_cost": 30000},
-    "chickpea":      {"price_per_q": 5440, "yield_q_ha": 12,  "input_cost": 18000},
-    "lentil":        {"price_per_q": 6000, "yield_q_ha": 10,  "input_cost": 15000},
-    "papaya":        {"price_per_q": 800,  "yield_q_ha": 250, "input_cost": 35000},
-    "coconut":       {"price_per_q": 2500, "yield_q_ha": 120, "input_cost": 25000},
-    "pomegranate":   {"price_per_q": 8000, "yield_q_ha": 80,  "input_cost": 40000},
-    "grapes":        {"price_per_q": 6000, "yield_q_ha": 100, "input_cost": 50000},
-    "watermelon":    {"price_per_q": 600,  "yield_q_ha": 250, "input_cost": 20000},
-    "muskmelon":     {"price_per_q": 1200, "yield_q_ha": 150, "input_cost": 20000},
-    "orange":        {"price_per_q": 4000, "yield_q_ha": 100, "input_cost": 35000},
-    "apple":         {"price_per_q": 8000, "yield_q_ha": 80,  "input_cost": 45000},
-    "mungbean":      {"price_per_q": 7755, "yield_q_ha": 8,   "input_cost": 12000},
-    "mothbeans":     {"price_per_q": 6000, "yield_q_ha": 7,   "input_cost": 10000},
-    "pigeonpeas":    {"price_per_q": 7000, "yield_q_ha": 10,  "input_cost": 12000},
-    "kidneybeans":   {"price_per_q": 9000, "yield_q_ha": 12,  "input_cost": 18000},
-    "blackgram":     {"price_per_q": 7400, "yield_q_ha": 8,   "input_cost": 12000},
-    "coffee":        {"price_per_q": 18000,"yield_q_ha": 8,   "input_cost": 50000},
-    "joha_rice":     {"price_per_q": 6000, "yield_q_ha": 18,  "input_cost": 22000},
-    "joha_rice72":   {"price_per_q": 5500, "yield_q_ha": 20,  "input_cost": 22000},
-    "bao_rice":      {"price_per_q": 3500, "yield_q_ha": 20,  "input_cost": 20000},
-    "bora_rice":     {"price_per_q": 4500, "yield_q_ha": 18,  "input_cost": 20000},
-    "chokuwa_rice":  {"price_per_q": 5000, "yield_q_ha": 18,  "input_cost": 20000},
-    "komal_saul":    {"price_per_q": 7000, "yield_q_ha": 15,  "input_cost": 22000},
-    "xaaj_rice":     {"price_per_q": 4000, "yield_q_ha": 20,  "input_cost": 20000},
-    "apong_rice":    {"price_per_q": 4000, "yield_q_ha": 20,  "input_cost": 20000},
-    "bhut_jolokia":  {"price_per_q": 25000,"yield_q_ha": 12,  "input_cost": 30000},
-    "kaji_nemu":     {"price_per_q": 4000, "yield_q_ha": 80,  "input_cost": 20000},
-    "ou_tenga":      {"price_per_q": 2000, "yield_q_ha": 60,  "input_cost": 15000},
-    "thekera":       {"price_per_q": 3000, "yield_q_ha": 40,  "input_cost": 15000},
-    "amlokhi":       {"price_per_q": 3500, "yield_q_ha": 60,  "input_cost": 20000},
-    "bogori":        {"price_per_q": 2500, "yield_q_ha": 50,  "input_cost": 15000},
-    "leteku":        {"price_per_q": 5000, "yield_q_ha": 50,  "input_cost": 20000},
-    "jalpai":        {"price_per_q": 2000, "yield_q_ha": 40,  "input_cost": 15000},
-    "areca_nut":     {"price_per_q": 35000,"yield_q_ha": 15,  "input_cost": 40000},
-    "betel_leaf":    {"price_per_q": 8000, "yield_q_ha": 30,  "input_cost": 25000},
-    "kola_banana":   {"price_per_q": 2000, "yield_q_ha": 180, "input_cost": 40000},
-    "lai_xaak":      {"price_per_q": 800,  "yield_q_ha": 80,  "input_cost": 10000},
-    "kosu":          {"price_per_q": 1200, "yield_q_ha": 100, "input_cost": 15000},
-    "dhekia_xaak":   {"price_per_q": 1500, "yield_q_ha": 30,  "input_cost": 8000},
-    "manimuni":      {"price_per_q": 2000, "yield_q_ha": 40,  "input_cost": 8000},
-    "local_brinjal": {"price_per_q": 1500, "yield_q_ha": 150, "input_cost": 20000},
-    "local_pumpkin": {"price_per_q": 800,  "yield_q_ha": 200, "input_cost": 15000},
-    "local_beans":   {"price_per_q": 4000, "yield_q_ha": 20,  "input_cost": 15000},
-    "bamboo_shoot":  {"price_per_q": 3000, "yield_q_ha": 50,  "input_cost": 10000},
+    "rice":          {"price_per_q": 2200,  "yield_q_ha": 25,  "input_cost": 25000},
+    "wheat":         {"price_per_q": 2275,  "yield_q_ha": 30,  "input_cost": 22000},
+    "maize":         {"price_per_q": 1850,  "yield_q_ha": 35,  "input_cost": 18000},
+    "jute":          {"price_per_q": 5500,  "yield_q_ha": 20,  "input_cost": 20000},
+    "assam_tea":     {"price_per_q": 15000, "yield_q_ha": 18,  "input_cost": 80000},
+    "mustard":       {"price_per_q": 5650,  "yield_q_ha": 10,  "input_cost": 15000},
+    "sugarcane":     {"price_per_q": 315,   "yield_q_ha": 600, "input_cost": 40000},
+    "cotton":        {"price_per_q": 6600,  "yield_q_ha": 15,  "input_cost": 35000},
+    "banana":        {"price_per_q": 1500,  "yield_q_ha": 200, "input_cost": 45000},
+    "mango":         {"price_per_q": 3000,  "yield_q_ha": 80,  "input_cost": 30000},
+    "chickpea":      {"price_per_q": 5440,  "yield_q_ha": 12,  "input_cost": 18000},
+    "lentil":        {"price_per_q": 6000,  "yield_q_ha": 10,  "input_cost": 15000},
+    "papaya":        {"price_per_q": 800,   "yield_q_ha": 250, "input_cost": 35000},
+    "coconut":       {"price_per_q": 2500,  "yield_q_ha": 120, "input_cost": 25000},
+    "pomegranate":   {"price_per_q": 8000,  "yield_q_ha": 80,  "input_cost": 40000},
+    "grapes":        {"price_per_q": 6000,  "yield_q_ha": 100, "input_cost": 50000},
+    "watermelon":    {"price_per_q": 600,   "yield_q_ha": 250, "input_cost": 20000},
+    "muskmelon":     {"price_per_q": 1200,  "yield_q_ha": 150, "input_cost": 20000},
+    "orange":        {"price_per_q": 4000,  "yield_q_ha": 100, "input_cost": 35000},
+    "apple":         {"price_per_q": 8000,  "yield_q_ha": 80,  "input_cost": 45000},
+    "mungbean":      {"price_per_q": 7755,  "yield_q_ha": 8,   "input_cost": 12000},
+    "mothbeans":     {"price_per_q": 6000,  "yield_q_ha": 7,   "input_cost": 10000},
+    "pigeonpeas":    {"price_per_q": 7000,  "yield_q_ha": 10,  "input_cost": 12000},
+    "kidneybeans":   {"price_per_q": 9000,  "yield_q_ha": 12,  "input_cost": 18000},
+    "blackgram":     {"price_per_q": 7400,  "yield_q_ha": 8,   "input_cost": 12000},
+    "coffee":        {"price_per_q": 18000, "yield_q_ha": 8,   "input_cost": 50000},
+    "joha_rice":     {"price_per_q": 6000,  "yield_q_ha": 18,  "input_cost": 22000},
+    "joha_rice72":   {"price_per_q": 5500,  "yield_q_ha": 20,  "input_cost": 22000},
+    "bao_rice":      {"price_per_q": 3500,  "yield_q_ha": 20,  "input_cost": 20000},
+    "bora_rice":     {"price_per_q": 4500,  "yield_q_ha": 18,  "input_cost": 20000},
+    "chokuwa_rice":  {"price_per_q": 5000,  "yield_q_ha": 18,  "input_cost": 20000},
+    "komal_saul":    {"price_per_q": 7000,  "yield_q_ha": 15,  "input_cost": 22000},
+    "xaaj_rice":     {"price_per_q": 4000,  "yield_q_ha": 20,  "input_cost": 20000},
+    "apong_rice":    {"price_per_q": 4000,  "yield_q_ha": 20,  "input_cost": 20000},
+    "bhut_jolokia":  {"price_per_q": 25000, "yield_q_ha": 12,  "input_cost": 30000},
+    "kaji_nemu":     {"price_per_q": 4000,  "yield_q_ha": 80,  "input_cost": 20000},
+    "ou_tenga":      {"price_per_q": 2000,  "yield_q_ha": 60,  "input_cost": 15000},
+    "thekera":       {"price_per_q": 3000,  "yield_q_ha": 40,  "input_cost": 15000},
+    "amlokhi":       {"price_per_q": 3500,  "yield_q_ha": 60,  "input_cost": 20000},
+    "bogori":        {"price_per_q": 2500,  "yield_q_ha": 50,  "input_cost": 15000},
+    "leteku":        {"price_per_q": 5000,  "yield_q_ha": 50,  "input_cost": 20000},
+    "jalpai":        {"price_per_q": 2000,  "yield_q_ha": 40,  "input_cost": 15000},
+    "areca_nut":     {"price_per_q": 35000, "yield_q_ha": 15,  "input_cost": 40000},
+    "betel_leaf":    {"price_per_q": 8000,  "yield_q_ha": 30,  "input_cost": 25000},
+    "kola_banana":   {"price_per_q": 2000,  "yield_q_ha": 180, "input_cost": 40000},
+    "lai_xaak":      {"price_per_q": 800,   "yield_q_ha": 80,  "input_cost": 10000},
+    "kosu":          {"price_per_q": 1200,  "yield_q_ha": 100, "input_cost": 15000},
+    "dhekia_xaak":   {"price_per_q": 1500,  "yield_q_ha": 30,  "input_cost": 8000},
+    "manimuni":      {"price_per_q": 2000,  "yield_q_ha": 40,  "input_cost": 8000},
+    "local_brinjal": {"price_per_q": 1500,  "yield_q_ha": 150, "input_cost": 20000},
+    "local_pumpkin": {"price_per_q": 800,   "yield_q_ha": 200, "input_cost": 15000},
+    "local_beans":   {"price_per_q": 4000,  "yield_q_ha": 20,  "input_cost": 15000},
+    "bamboo_shoot":  {"price_per_q": 3000,  "yield_q_ha": 50,  "input_cost": 10000},
 }
 
 def get_market_forecast(crop_key: str) -> dict:
-    data        = MARKET_DATA.get(crop_key.lower(), {"price_per_q": 2000, "yield_q_ha": 20, "input_cost": 20000})
-    revenue     = data["price_per_q"] * data["yield_q_ha"]
-    net_profit  = revenue - data["input_cost"]
-    roi_pct     = (net_profit / data["input_cost"]) * 100 if data["input_cost"] > 0 else 0
+    data       = MARKET_DATA.get(crop_key.lower(), {"price_per_q": 2000, "yield_q_ha": 20, "input_cost": 20000})
+    revenue    = data["price_per_q"] * data["yield_q_ha"]
+    net_profit = revenue - data["input_cost"]
+    roi_pct    = (net_profit / data["input_cost"]) * 100 if data["input_cost"] > 0 else 0
     return {
-        "price_per_q":  data["price_per_q"],
-        "yield_q_ha":   data["yield_q_ha"],
-        "input_cost":   data["input_cost"],
-        "revenue":      revenue,
-        "net_profit":   net_profit,
-        "roi_pct":      round(roi_pct, 1),
+        "price_per_q": data["price_per_q"],
+        "yield_q_ha":  data["yield_q_ha"],
+        "input_cost":  data["input_cost"],
+        "revenue":     revenue,
+        "net_profit":  net_profit,
+        "roi_pct":     round(roi_pct, 1),
     }
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# PDF REPORT GENERATOR (Updated for all 3 upgrades)
+# PDF REPORT GENERATOR
 # ═══════════════════════════════════════════════════════════════════════════════
 
-import os, urllib.request
-
 def _ensure_unicode_font() -> str:
-    """
-    Downloads NotoSans-Regular.ttf once into the project folder.
-    Returns the file path. Safe to call every time — skips if already present.
-    """
     font_path = "NotoSans-Regular.ttf"
     if not os.path.exists(font_path):
         url = (
@@ -485,13 +649,11 @@ def _ensure_unicode_font() -> str:
 
 def create_pdf_report(district, crop_name, confidence, temp, humidity, ph,
                       rainfall, N, P, K, fert: dict, market: dict, lang: str = "en") -> bytes:
-    t = UI_TEXT.get(lang, UI_TEXT["en"])
+    t   = UI_TEXT.get(lang, UI_TEXT["en"])
     pdf = FPDF()
     pdf.add_page()
 
-    # ── Font setup ────────────────────────────────────────────────────────────
-    # Assamese needs a Unicode TTF font. English can use built-in Helvetica.
-    # ── Font setup ────────────────────────────────────────────────────────────
+    # Font: NotoSans for Assamese (Unicode), built-in Helvetica for English
     if lang == "as":
         font_path = _ensure_unicode_font()
         pdf.add_font("NotoSans", style="",  fname=font_path)
@@ -499,50 +661,46 @@ def create_pdf_report(district, crop_name, confidence, temp, humidity, ph,
         FONT_NORMAL = "NotoSans"
         FONT_BOLD   = "NotoSans"
     else:
-        font_path = "DejaVuSans.ttf"
-        pdf.add_font("DejaVu", "", font_path, uni=True)
-        pdf.add_font("DejaVu", "B", font_path, uni=True)
-        FONT_NORMAL = "DejaVu"
-        FONT_BOLD   = "DejaVu"
+        FONT_NORMAL = "Helvetica"
+        FONT_BOLD   = "Helvetica"
 
     def set_normal(size=12):
         pdf.set_font(FONT_NORMAL, size=size)
 
     def set_bold(size=12):
-        pdf.set_font(FONT_BOLD, style="B" if lang == "en" else "", size=size)
+        style = "B" if lang == "en" else ""
+        pdf.set_font(FONT_BOLD, style=style, size=size)
 
-    # ── Header ────────────────────────────────────────────────────────────────
     set_bold(20)
     pdf.set_text_color(46, 139, 87)
     pdf.cell(0, 15, t["pdf_report"], ln=True, align='C')
     pdf.ln(3)
 
-    # ── General info ──────────────────────────────────────────────────────────
     set_normal(12)
     pdf.set_text_color(0, 0, 0)
     pdf.cell(0, 10, f"{t['pdf_date']}: {datetime.date.today().strftime('%B %d, %Y')}", ln=True)
     pdf.cell(0, 10, f"{t['pdf_location']}: {district.title()}, Assam", ln=True)
     pdf.ln(3)
 
-    # ── Top recommendation ────────────────────────────────────────────────────
     set_bold(14)
     pdf.set_text_color(0, 100, 0)
     pdf.cell(0, 10, f"{t['pdf_top_crop']}: {crop_name} ({confidence:.1f}% AI Confidence)", ln=True)
     pdf.ln(3)
 
-    # ── Environmental data ────────────────────────────────────────────────────
     set_bold(12)
     pdf.set_text_color(0, 0, 0)
     pdf.cell(0, 10, f"{t['pdf_env']}:", ln=True)
     set_normal(12)
-    pdf.cell(0, 8, f"  - {t['temperature']}: {temp} C", ln=True)
-    pdf.cell(0, 8, f"  - {t['humidity']}: {humidity} %", ln=True)
-    pdf.cell(0, 8, f"  - {t['rainfall_mm']}: {rainfall} mm", ln=True)
-    pdf.cell(0, 8, f"  - {t['soil_ph']}: {ph}", ln=True)
-    pdf.cell(0, 8, f"  - N: {N}  |  P: {P}  |  K: {K}", ln=True)
+    for label, val in [
+        (t['temperature'], f"{temp} C"),
+        (t['humidity'],    f"{humidity} %"),
+        (t['rainfall_mm'], f"{rainfall} mm"),
+        (t['soil_ph'],     str(ph)),
+        ("N / P / K",      f"{N}  |  {P}  |  {K}"),
+    ]:
+        pdf.cell(0, 8, f"  - {label}: {val}", ln=True)
     pdf.ln(4)
 
-    # ── Fertilizer prescription ───────────────────────────────────────────────
     set_bold(12)
     pdf.set_text_color(139, 69, 19)
     pdf.cell(0, 10, f"{t['pdf_fert']}:", ln=True)
@@ -551,28 +709,30 @@ def create_pdf_report(district, crop_name, confidence, temp, humidity, ph,
     if fert["all_optimal"]:
         pdf.cell(0, 8, f"  {t['fert_optimal']}", ln=True)
     else:
-        if fert["urea_kg"] > 0:
-            pdf.cell(0, 8, f"  - {t['add_urea']}: {fert['urea_kg']} {t['kg_per_ha']}", ln=True)
-        if fert["dap_kg"] > 0:
-            pdf.cell(0, 8, f"  - {t['add_dap']}: {fert['dap_kg']} {t['kg_per_ha']}", ln=True)
-        if fert["mop_kg"] > 0:
-            pdf.cell(0, 8, f"  - {t['add_mop']}: {fert['mop_kg']} {t['kg_per_ha']}", ln=True)
+        for label, qty in [
+            (t['add_urea'], fert['urea_kg']),
+            (t['add_dap'],  fert['dap_kg']),
+            (t['add_mop'],  fert['mop_kg']),
+        ]:
+            if qty > 0:
+                pdf.cell(0, 8, f"  - {label}: {qty} {t['kg_per_ha']}", ln=True)
     pdf.ln(4)
 
-    # ── Market forecast ───────────────────────────────────────────────────────
     set_bold(12)
     pdf.set_text_color(0, 70, 140)
     pdf.cell(0, 10, f"{t['pdf_market']}:", ln=True)
     set_normal(12)
     pdf.set_text_color(0, 0, 0)
-    pdf.cell(0, 8, f"  - {t['market_price']}: Rs. {market['price_per_q']:,} / quintal", ln=True)
-    pdf.cell(0, 8, f"  - {t['market_yield']}: {market['yield_q_ha']} quintals", ln=True)
-    pdf.cell(0, 8, f"  - {t['market_revenue']}: Rs. {market['revenue']:,}", ln=True)
-    pdf.cell(0, 8, f"  - {t['market_cost']}: Rs. {market['input_cost']:,}", ln=True)
-    pdf.cell(0, 8, f"  - {t['market_profit']}: Rs. {market['net_profit']:,}  (ROI: {market['roi_pct']}%)", ln=True)
+    for label, val in [
+        (t['market_price'],   f"Rs. {market['price_per_q']:,} / quintal"),
+        (t['market_yield'],   f"{market['yield_q_ha']} quintals"),
+        (t['market_revenue'], f"Rs. {market['revenue']:,}"),
+        (t['market_cost'],    f"Rs. {market['input_cost']:,}"),
+        (t['market_profit'],  f"Rs. {market['net_profit']:,}  (ROI: {market['roi_pct']}%)"),
+    ]:
+        pdf.cell(0, 8, f"  - {label}: {val}", ln=True)
     pdf.ln(10)
 
-    # ── Footer ────────────────────────────────────────────────────────────────
     set_normal(10)
     pdf.set_text_color(100, 100, 100)
     pdf.cell(0, 10, t["pdf_footer"], align='C')
@@ -581,7 +741,7 @@ def create_pdf_report(district, crop_name, confidence, temp, humidity, ph,
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# IMAGE FETCHING (unchanged)
+# IMAGE FETCHING
 # ═══════════════════════════════════════════════════════════════════════════════
 
 _IMG_HEADERS = {
@@ -604,47 +764,93 @@ _SKIP_KEYWORDS = [
 _VALID_EXTS = (".jpg", ".jpeg", ".png", ".webp")
 
 _CROP_WIKI_TITLES = {
-    "rice": "Rice", "wheat": "Wheat", "maize": "Maize", "jute": "Jute",
-    "assam_tea": "Assam_tea", "coffee": "Coffea", "mustard": "Mustard_plant",
-    "sugarcane": "Sugarcane", "cotton": "Cotton", "banana": "Banana",
-    "mango": "Mango", "chickpea": "Chickpea", "lentil": "Lentil",
-    "papaya": "Papaya", "coconut": "Coconut", "pomegranate": "Pomegranate",
-    "grapes": "Grape", "watermelon": "Watermelon", "muskmelon": "Muskmelon",
-    "orange": "Orange_(fruit)", "apple": "Apple", "mungbean": "Mung_bean",
-    "mothbeans": "Moth_bean", "pigeonpeas": "Pigeon_pea",
-    "kidneybeans": "Kidney_bean", "blackgram": "Vigna_mungo",
-    "joha_rice": "Joha_rice", "joha_rice72": "Joha_rice",
-    "bao_rice": "Bao_rice", "bora_rice": "Glutinous_rice",
-    "chokuwa_rice": "Chokuwa_rice", "komal_saul": "Komal_saul",
-    "xaaj_rice": "Xaj_(drink)", "apong_rice": "Apong",
-    "bhut_jolokia": "Bhut_jolokia", "kaji_nemu": "Kaji_Nemu",
-    "ou_tenga": "Elephant_apple", "thekera": "Garcinia_pedunculata",
-    "amlokhi": "Phyllanthus_emblica", "bogori": "Ziziphus_mauritiana",
-    "leteku": "Baccaurea_ramiflora", "jalpai": "Elaeocarpus_floribundus",
-    "areca_nut": "Areca_nut", "betel_leaf": "Betel", "kola_banana": "Banana",
-    "lai_xaak": "Brassica_juncea", "kosu": "Colocasia_esculenta",
-    "dhekia_xaak": "Diplazium_esculentum", "manimuni": "Centella_asiatica",
-    "local_brinjal": "Brinjal", "local_pumpkin": "Pumpkin",
-    "local_beans": "Bean", "bamboo_shoot": "Bamboo_shoot",
+    "rice":          "Rice",
+    "wheat":         "Wheat",
+    "maize":         "Maize",
+    "jute":          "Jute",
+    "assam_tea":     "Assam_tea",
+    "coffee":        "Coffea",
+    "mustard":       "Mustard_plant",
+    "sugarcane":     "Sugarcane",
+    "cotton":        "Cotton",
+    "banana":        "Banana",
+    "mango":         "Mango",
+    "chickpea":      "Chickpea",
+    "lentil":        "Lentil",
+    "papaya":        "Papaya",
+    "coconut":       "Coconut",
+    "pomegranate":   "Pomegranate",
+    "grapes":        "Grape",
+    "watermelon":    "Watermelon",
+    # FIX: Cucumis_melo has a much better fruit/field photo than the old "Muskmelon" redirect
+    "muskmelon":     "Cucumis_melo",
+    "orange":        "Orange_(fruit)",
+    "apple":         "Apple",
+    "mungbean":      "Mung_bean",
+    "mothbeans":     "Moth_bean",
+    "pigeonpeas":    "Pigeon_pea",
+    "kidneybeans":   "Kidney_bean",
+    "blackgram":     "Vigna_mungo",
+    "joha_rice":     "Joha_rice",
+    "joha_rice72":   "Joha_rice",
+    # FIX: "Bao_rice" does not exist on Wikipedia; Boro_rice is the correct article
+    # for the deepwater/flood-tolerant rice variety grown in Assam
+    "bao_rice":      "Boro_rice",
+    "bora_rice":     "Glutinous_rice",
+    "chokuwa_rice":  "Chokuwa_rice",
+    "komal_saul":    "Komal_saul",
+    "xaaj_rice":     "Xaj_(drink)",
+    "apong_rice":    "Apong",
+    "bhut_jolokia":  "Bhut_jolokia",
+    "kaji_nemu":     "Kaji_Nemu",
+    "ou_tenga":      "Elephant_apple",
+    "thekera":       "Garcinia_pedunculata",
+    "amlokhi":       "Phyllanthus_emblica",
+    "bogori":        "Ziziphus_mauritiana",
+    "leteku":        "Baccaurea_ramiflora",
+    "jalpai":        "Elaeocarpus_floribundus",
+    "areca_nut":     "Areca_nut",
+    "betel_leaf":    "Betel",
+    "kola_banana":   "Banana",
+    "lai_xaak":      "Brassica_juncea",
+    "kosu":          "Colocasia_esculenta",
+    "dhekia_xaak":   "Diplazium_esculentum",
+    "manimuni":      "Centella_asiatica",
+    "local_brinjal": "Brinjal",
+    "local_pumpkin": "Pumpkin",
+    "local_beans":   "Bean",
+    "bamboo_shoot":  "Bamboo_shoot",
 }
 
 _CROP_DISPLAY_NAMES = {
-    "joha_rice": "Joha Rice", "joha_rice72": "Joha Rice (72)",
-    "bao_rice": "Bao Rice", "bora_rice": "Bora Rice (Glutinous)",
-    "chokuwa_rice": "Chokuwa Rice", "komal_saul": "Komal Saul (Soft Rice)",
-    "xaaj_rice": "Xaaj Rice", "apong_rice": "Apong Rice",
-    "bhut_jolokia": "Bhut Jolokia (Ghost Pepper)",
-    "kaji_nemu": "Kaji Nemu (Assam Lemon)",
-    "ou_tenga": "Ou Tenga (Elephant Apple)", "thekera": "Thekera",
-    "amlokhi": "Amlokhi (Indian Gooseberry)",
-    "bogori": "Bogori (Indian Jujube)", "leteku": "Leteku",
-    "jalpai": "Jalpai (Indian Olive)", "areca_nut": "Areca Nut (Tamul)",
-    "betel_leaf": "Betel Leaf (Pan)", "kola_banana": "Kola Banana",
-    "lai_xaak": "Lai Xaak (Mustard Greens)", "kosu": "Kosu (Taro)",
-    "dhekia_xaak": "Dhekia Xaak (Edible Fern)",
-    "manimuni": "Manimuni (Pennywort)", "local_brinjal": "Local Brinjal",
-    "local_pumpkin": "Local Pumpkin", "local_beans": "Local Beans",
-    "bamboo_shoot": "Bamboo Shoot", "assam_tea": "Assam Tea",
+    "joha_rice":     "Joha Rice",
+    "joha_rice72":   "Joha Rice (72)",
+    "bao_rice":      "Bao Rice",
+    "bora_rice":     "Bora Rice (Glutinous)",
+    "chokuwa_rice":  "Chokuwa Rice",
+    "komal_saul":    "Komal Saul (Soft Rice)",
+    "xaaj_rice":     "Xaaj Rice",
+    "apong_rice":    "Apong Rice",
+    "bhut_jolokia":  "Bhut Jolokia (Ghost Pepper)",
+    "kaji_nemu":     "Kaji Nemu (Assam Lemon)",
+    "ou_tenga":      "Ou Tenga (Elephant Apple)",
+    "thekera":       "Thekera",
+    "amlokhi":       "Amlokhi (Indian Gooseberry)",
+    "bogori":        "Bogori (Indian Jujube)",
+    "leteku":        "Leteku",
+    "jalpai":        "Jalpai (Indian Olive)",
+    "areca_nut":     "Areca Nut (Tamul)",
+    "betel_leaf":    "Betel Leaf (Pan)",
+    "kola_banana":   "Kola Banana",
+    "lai_xaak":      "Lai Xaak (Mustard Greens)",
+    "kosu":          "Kosu (Taro)",
+    "dhekia_xaak":   "Dhekia Xaak (Edible Fern)",
+    "manimuni":      "Manimuni (Pennywort)",
+    "local_brinjal": "Local Brinjal",
+    "local_pumpkin": "Local Pumpkin",
+    "local_beans":   "Local Beans",
+    "bamboo_shoot":  "Bamboo Shoot",
+    "assam_tea":     "Assam Tea",
 }
 
 def get_display_name(crop_key: str) -> str:
@@ -677,7 +883,7 @@ def _try_wikipedia_infobox(crop_key: str):
         api = (f"https://en.wikipedia.org/w/api.php"
                f"?action=query&titles={title}&prop=pageimages"
                "&pithumbsize=600&format=json&origin=*")
-        r = requests.get(api, headers={"User-Agent": "AssamCropRecommender/2.0"},
+        r = requests.get(api, headers={"User-Agent": "AssamCropRecommender/3.1"},
                          timeout=10, verify=False)
         if r.status_code == 200:
             pages = r.json().get("query", {}).get("pages", {})
@@ -698,7 +904,7 @@ def _try_wikimedia_search(crop_name: str):
                f"?action=query&generator=search&gsrnamespace=6&gsrsearch={query}"
                "&prop=imageinfo&iiprop=url&iiurlwidth=600"
                "&format=json&origin=*&gsrlimit=25")
-        r = requests.get(api, headers={"User-Agent": "AssamCropRecommender/2.0"},
+        r = requests.get(api, headers={"User-Agent": "AssamCropRecommender/3.1"},
                          timeout=10, verify=False)
         if r.status_code == 200:
             pages = r.json().get("query", {}).get("pages", {})
@@ -759,59 +965,59 @@ def load_models():
 
 # ─── Crop Info ────────────────────────────────────────────────────────────────
 CROP_INFO: dict[str, dict] = {
-    "rice":{"season":"Kharif (Jun-Nov)","water":"High","icon":"🌾"},
-    "wheat":{"season":"Rabi (Nov-Apr)","water":"Medium","icon":"🌿"},
-    "maize":{"season":"Kharif / Rabi","water":"Medium","icon":"🌽"},
-    "jute":{"season":"Kharif (Mar-Jul)","water":"High","icon":"🌱"},
-    "assam_tea":{"season":"Year-round","water":"High","icon":"🍵"},
-    "mustard":{"season":"Rabi (Oct-Mar)","water":"Low","icon":"🌼"},
-    "sugarcane":{"season":"Year-round","water":"High","icon":"🎋"},
-    "cotton":{"season":"Kharif (Apr-Nov)","water":"Medium","icon":"☁️"},
-    "banana":{"season":"Year-round","water":"Medium","icon":"🍌"},
-    "mango":{"season":"Summer (Mar-Jun)","water":"Low","icon":"🥭"},
-    "chickpea":{"season":"Rabi (Oct-Mar)","water":"Low","icon":"🫘"},
-    "lentil":{"season":"Rabi (Oct-Mar)","water":"Low","icon":"🫘"},
-    "papaya":{"season":"Year-round","water":"Medium","icon":"🍈"},
-    "coconut":{"season":"Year-round","water":"High","icon":"🥥"},
-    "pomegranate":{"season":"Summer / Winter","water":"Low","icon":"🍎"},
-    "grapes":{"season":"Winter (Oct-Feb)","water":"Medium","icon":"🍇"},
-    "watermelon":{"season":"Summer (Mar-Jun)","water":"Low","icon":"🍉"},
-    "muskmelon":{"season":"Summer (Feb-May)","water":"Low","icon":"🍈"},
-    "orange":{"season":"Winter (Dec-Feb)","water":"Medium","icon":"🍊"},
-    "apple":{"season":"Summer (Jun-Sep)","water":"Medium","icon":"🍎"},
-    "mungbean":{"season":"Kharif / Summer","water":"Low","icon":"🫘"},
-    "mothbeans":{"season":"Kharif (Jun-Sep)","water":"Low","icon":"🫘"},
-    "pigeonpeas":{"season":"Kharif (Jun-Nov)","water":"Low","icon":"🫘"},
-    "kidneybeans":{"season":"Kharif (Jun-Sep)","water":"Medium","icon":"🫘"},
-    "blackgram":{"season":"Kharif / Rabi","water":"Low","icon":"🫘"},
-    "coffee":{"season":"Year-round","water":"Medium","icon":"☕"},
-    "joha_rice":{"season":"Kharif (Jun-Nov)","water":"High","icon":"🌾"},
-    "joha_rice72":{"season":"Kharif (Jun-Nov)","water":"High","icon":"🌾"},
-    "bao_rice":{"season":"Kharif (Jun-Dec)","water":"High","icon":"🌾"},
-    "bora_rice":{"season":"Kharif (Jun-Nov)","water":"High","icon":"🌾"},
-    "chokuwa_rice":{"season":"Kharif (Jun-Nov)","water":"High","icon":"🌾"},
-    "komal_saul":{"season":"Kharif (Jun-Nov)","water":"High","icon":"🌾"},
-    "xaaj_rice":{"season":"Kharif (Jun-Nov)","water":"High","icon":"🌾"},
-    "apong_rice":{"season":"Kharif (Jun-Nov)","water":"High","icon":"🌾"},
-    "bhut_jolokia":{"season":"Kharif (Jul-Oct)","water":"Medium","icon":"🌶️"},
-    "kaji_nemu":{"season":"Year-round","water":"Medium","icon":"🍋"},
-    "ou_tenga":{"season":"Monsoon (Jun-Sep)","water":"Medium","icon":"🍏"},
-    "thekera":{"season":"Monsoon (Jun-Sep)","water":"Medium","icon":"🍋"},
-    "amlokhi":{"season":"Rabi (Oct-Feb)","water":"Low","icon":"🟢"},
-    "bogori":{"season":"Winter (Oct-Jan)","water":"Low","icon":"🫐"},
-    "leteku":{"season":"Summer (Apr-Jun)","water":"Medium","icon":"🍇"},
-    "jalpai":{"season":"Monsoon (Jul-Sep)","water":"Medium","icon":"🫒"},
-    "areca_nut":{"season":"Year-round","water":"High","icon":"🌴"},
-    "betel_leaf":{"season":"Year-round","water":"High","icon":"🍃"},
-    "kola_banana":{"season":"Year-round","water":"Medium","icon":"🍌"},
-    "lai_xaak":{"season":"Rabi (Oct-Feb)","water":"Medium","icon":"🥬"},
-    "kosu":{"season":"Year-round","water":"High","icon":"🌿"},
-    "dhekia_xaak":{"season":"Monsoon (Jun-Sep)","water":"High","icon":"🌿"},
-    "manimuni":{"season":"Year-round","water":"Medium","icon":"🌿"},
-    "local_brinjal":{"season":"Year-round","water":"Medium","icon":"🍆"},
-    "local_pumpkin":{"season":"Kharif (Jun-Oct)","water":"Medium","icon":"🎃"},
-    "local_beans":{"season":"Kharif / Rabi","water":"Medium","icon":"🫘"},
-    "bamboo_shoot":{"season":"Monsoon (Jun-Aug)","water":"High","icon":"🎍"},
+    "rice":          {"season": "Kharif (Jun-Nov)",   "water": "High",   "icon": "🌾"},
+    "wheat":         {"season": "Rabi (Nov-Apr)",      "water": "Medium", "icon": "🌿"},
+    "maize":         {"season": "Kharif / Rabi",       "water": "Medium", "icon": "🌽"},
+    "jute":          {"season": "Kharif (Mar-Jul)",    "water": "High",   "icon": "🌱"},
+    "assam_tea":     {"season": "Year-round",           "water": "High",   "icon": "🍵"},
+    "mustard":       {"season": "Rabi (Oct-Mar)",       "water": "Low",    "icon": "🌼"},
+    "sugarcane":     {"season": "Year-round",           "water": "High",   "icon": "🎋"},
+    "cotton":        {"season": "Kharif (Apr-Nov)",    "water": "Medium", "icon": "☁️"},
+    "banana":        {"season": "Year-round",           "water": "Medium", "icon": "🍌"},
+    "mango":         {"season": "Summer (Mar-Jun)",    "water": "Low",    "icon": "🥭"},
+    "chickpea":      {"season": "Rabi (Oct-Mar)",       "water": "Low",    "icon": "🫘"},
+    "lentil":        {"season": "Rabi (Oct-Mar)",       "water": "Low",    "icon": "🫘"},
+    "papaya":        {"season": "Year-round",           "water": "Medium", "icon": "🍈"},
+    "coconut":       {"season": "Year-round",           "water": "High",   "icon": "🥥"},
+    "pomegranate":   {"season": "Summer / Winter",     "water": "Low",    "icon": "🍎"},
+    "grapes":        {"season": "Winter (Oct-Feb)",    "water": "Medium", "icon": "🍇"},
+    "watermelon":    {"season": "Summer (Mar-Jun)",    "water": "Low",    "icon": "🍉"},
+    "muskmelon":     {"season": "Summer (Feb-May)",    "water": "Low",    "icon": "🍈"},
+    "orange":        {"season": "Winter (Dec-Feb)",    "water": "Medium", "icon": "🍊"},
+    "apple":         {"season": "Summer (Jun-Sep)",    "water": "Medium", "icon": "🍎"},
+    "mungbean":      {"season": "Kharif / Summer",     "water": "Low",    "icon": "🫘"},
+    "mothbeans":     {"season": "Kharif (Jun-Sep)",    "water": "Low",    "icon": "🫘"},
+    "pigeonpeas":    {"season": "Kharif (Jun-Nov)",    "water": "Low",    "icon": "🫘"},
+    "kidneybeans":   {"season": "Kharif (Jun-Sep)",    "water": "Medium", "icon": "🫘"},
+    "blackgram":     {"season": "Kharif / Rabi",       "water": "Low",    "icon": "🫘"},
+    "coffee":        {"season": "Year-round",           "water": "Medium", "icon": "☕"},
+    "joha_rice":     {"season": "Kharif (Jun-Nov)",    "water": "High",   "icon": "🌾"},
+    "joha_rice72":   {"season": "Kharif (Jun-Nov)",    "water": "High",   "icon": "🌾"},
+    "bao_rice":      {"season": "Kharif (Jun-Dec)",    "water": "High",   "icon": "🌾"},
+    "bora_rice":     {"season": "Kharif (Jun-Nov)",    "water": "High",   "icon": "🌾"},
+    "chokuwa_rice":  {"season": "Kharif (Jun-Nov)",    "water": "High",   "icon": "🌾"},
+    "komal_saul":    {"season": "Kharif (Jun-Nov)",    "water": "High",   "icon": "🌾"},
+    "xaaj_rice":     {"season": "Kharif (Jun-Nov)",    "water": "High",   "icon": "🌾"},
+    "apong_rice":    {"season": "Kharif (Jun-Nov)",    "water": "High",   "icon": "🌾"},
+    "bhut_jolokia":  {"season": "Kharif (Jul-Oct)",    "water": "Medium", "icon": "🌶️"},
+    "kaji_nemu":     {"season": "Year-round",           "water": "Medium", "icon": "🍋"},
+    "ou_tenga":      {"season": "Monsoon (Jun-Sep)",   "water": "Medium", "icon": "🍏"},
+    "thekera":       {"season": "Monsoon (Jun-Sep)",   "water": "Medium", "icon": "🍋"},
+    "amlokhi":       {"season": "Rabi (Oct-Feb)",       "water": "Low",    "icon": "🟢"},
+    "bogori":        {"season": "Winter (Oct-Jan)",    "water": "Low",    "icon": "🫐"},
+    "leteku":        {"season": "Summer (Apr-Jun)",    "water": "Medium", "icon": "🍇"},
+    "jalpai":        {"season": "Monsoon (Jul-Sep)",   "water": "Medium", "icon": "🫒"},
+    "areca_nut":     {"season": "Year-round",           "water": "High",   "icon": "🌴"},
+    "betel_leaf":    {"season": "Year-round",           "water": "High",   "icon": "🍃"},
+    "kola_banana":   {"season": "Year-round",           "water": "Medium", "icon": "🍌"},
+    "lai_xaak":      {"season": "Rabi (Oct-Feb)",       "water": "Medium", "icon": "🥬"},
+    "kosu":          {"season": "Year-round",           "water": "High",   "icon": "🌿"},
+    "dhekia_xaak":   {"season": "Monsoon (Jun-Sep)",   "water": "High",   "icon": "🌿"},
+    "manimuni":      {"season": "Year-round",           "water": "Medium", "icon": "🌿"},
+    "local_brinjal": {"season": "Year-round",           "water": "Medium", "icon": "🍆"},
+    "local_pumpkin": {"season": "Kharif (Jun-Oct)",    "water": "Medium", "icon": "🎃"},
+    "local_beans":   {"season": "Kharif / Rabi",       "water": "Medium", "icon": "🫘"},
+    "bamboo_shoot":  {"season": "Monsoon (Jun-Aug)",   "water": "High",   "icon": "🎍"},
 }
 
 def get_crop_info(crop_key: str) -> dict:
@@ -822,7 +1028,6 @@ def get_crop_info(crop_key: str) -> dict:
 # SIDEBAR
 # ═══════════════════════════════════════════════════════════════════════════════
 
-# Language must be initialised before sidebar renders
 if "lang" not in st.session_state:
     st.session_state["lang"] = "en"
 
@@ -830,8 +1035,8 @@ with st.sidebar:
     st.image("https://placehold.co/300x80/1a472a/white?text=Assam+Crop+Advisor",
              use_container_width=True)
 
-    # ── UPGRADE 6A: Language Toggle ───────────────────────────────────────────
-    lang_choice = st.radio(
+    # ── Language Toggle ───────────────────────────────────────────────────────
+    st.radio(
         T("lang_toggle"),
         options=["en", "as"],
         format_func=lambda x: "🇬🇧 English" if x == "en" else "🇮🇳 অসমীয়া",
@@ -840,43 +1045,52 @@ with st.sidebar:
     )
 
     st.markdown("---")
-    st.markdown("---")
 
-    # ── Camera Crop Recognition ──────────────────────────────────────────────
-    st.markdown("### 📷 Identify Crop from Photo")
-    cam_img = st.camera_input("Take a photo") or st.file_uploader(
-        "Or upload image", type=["jpg","jpeg","png","webp"], key="cam_upload")
-
-    if cam_img:
-        with st.spinner("Identifying crop..."):
-            try:
-                result = identify_crop_from_image(cam_img.getvalue())
-                st.success(f"Detected: **{result['display_name']}** ({result['confidence']}% confidence)")
-                if result.get("disease"):
-                    st.warning(f"⚠️ Disease detected: {result['disease']}\n\n{result.get('notes','')}")
-                else:
-                    st.info(f"📝 {result.get('notes', 'No disease found.')}")
-                st.session_state["detected_crop"] = result["crop_key"]
-            except Exception as e:
-                st.error(f"Could not identify crop: {e}")
-
-    st.markdown("---")
-    st.caption(T("caption"))
-
+    # ── Location ──────────────────────────────────────────────────────────────
     st.markdown(f'<div class="sidebar-section"><h4>{T("location_hdr")}</h4>', unsafe_allow_html=True)
     district = st.text_input(T("district"), value="Guwahati",
                               help="Used to fetch live temperature & humidity")
     st.markdown("</div>", unsafe_allow_html=True)
 
+    # ── Input Mode ────────────────────────────────────────────────────────────
     st.markdown(f'<div class="sidebar-section"><h4>{T("input_mode_hdr")}</h4>', unsafe_allow_html=True)
     input_mode = st.radio(T("input_mode"), [T("simple"), T("advanced")])
     st.markdown("</div>", unsafe_allow_html=True)
 
+    # ── Display Options ───────────────────────────────────────────────────────
     st.markdown(f'<div class="sidebar-section"><h4>{T("display_opts")}</h4>', unsafe_allow_html=True)
     show_dashboard = st.toggle(T("show_dash"),    value=True)
     show_history   = st.toggle(T("show_history"), value=False)
     top_n          = st.slider(T("num_recs"), 3, 7, 3)
     st.markdown("</div>", unsafe_allow_html=True)
+
+    st.markdown("---")
+
+    # ── Camera Crop Recognition ───────────────────────────────────────────────
+    st.markdown(f"### {T('cam_header')}")
+    cam_img = st.camera_input(T("cam_take")) or st.file_uploader(
+        T("cam_upload"), type=["jpg", "jpeg", "png", "webp"], key="cam_upload_widget"
+    )
+
+    if cam_img:
+        with st.spinner(T("cam_detecting")):
+            result = identify_crop_from_image(cam_img.getvalue())
+
+        if result["confidence"] > 0:
+            st.success(
+                f"{T('cam_detected')}: **{result['display_name']}** "
+                f"({result['confidence']}% confidence)"
+            )
+            if result.get("disease"):
+                st.error(
+                    f"⚠️ Disease detected: **{result['disease']}**\n\n"
+                    f"{result.get('notes', '')}"
+                )
+            else:
+                st.info(f"📝 {result.get('notes', T('cam_no_disease'))}")
+            st.session_state["detected_crop"] = result["crop_key"]
+        else:
+            st.error(f"{T('cam_error')}: {result.get('notes', 'Unknown error')}")
 
     st.markdown("---")
     st.caption(T("caption"))
@@ -940,11 +1154,21 @@ if simple_mode:
         season = st.selectbox(T("season"), list(season_rainfall.keys()))
         st.caption(f"Expected rainfall ≈ {season_rainfall[season]} mm")
 
+    # Show banner if camera detected a crop
+    detected = st.session_state.get("detected_crop")
+    if detected and detected != "unknown":
+        st.info(
+            f"{T('cam_pre_filled')} **{get_display_name(detected)}** — "
+            f"soil settings above are pre-filled from your selected type. "
+            f"Switch to Advanced Mode to enter exact soil values."
+        )
+
     N        = soil_properties[soil_type]["N"]
     P        = soil_properties[soil_type]["P"]
     K        = soil_properties[soil_type]["K"]
     ph       = soil_properties[soil_type]["ph"]
     rainfall = season_rainfall[season]
+
 else:
     st.info("Enter your soil lab test results. Weather data is fetched automatically.")
     c1, c2, c3 = st.columns(3)
@@ -1031,11 +1255,14 @@ if predict_btn:
         )
         st.progress(float(top_n_probs[0]), text=f"{T('confidence')}: **{best_conf:.1f}%**")
 
-        # ── Speak Aloud ──────────────────────────────────────────────────────
-        st.markdown("🔊 **Listen to your recommendation**")
-        fert_preview = calculate_fertilizer_prescription(best_crop, N, P, K)
+        # ── Speak Aloud ───────────────────────────────────────────────────────
+        st.markdown(f"**{T('listen_btn')}**")
+        fert_preview   = calculate_fertilizer_prescription(best_crop, N, P, K)
         market_preview = get_market_forecast(best_crop)
-        tts_text = build_tts_summary(best_label, fert_preview, market_preview, lang=st.session_state.get("lang", "en"))
+        tts_text       = build_tts_summary(
+            best_label, fert_preview, market_preview,
+            lang=st.session_state.get("lang", "en"),
+        )
         render_tts_player(tts_text, lang=st.session_state.get("lang", "en"))
 
     st.divider()
@@ -1048,7 +1275,7 @@ if predict_btn:
             name     = get_display_name(top_n_crops[i])
             conf_pct = top_n_probs[i] * 100
             cinfo    = get_crop_info(top_n_crops[i])
-            rank     = ["🥇","🥈","🥉","4️⃣","5️⃣","6️⃣","7️⃣"][i]
+            rank     = ["🥇", "🥈", "🥉", "4️⃣", "5️⃣", "6️⃣", "7️⃣"][i]
             st.metric(label=f"{rank} {name}", value=f"{conf_pct:.1f}%",
                       delta=f"{cinfo['icon']} {cinfo['season']}")
             st.progress(float(top_n_probs[i]))
@@ -1066,58 +1293,60 @@ if predict_btn:
                 title={"text": title, "font": {"size": 14}},
                 gauge={"axis": {"range": rng}, "bar": {"color": color}, "steps": steps},
             ))
-            fig.update_layout(height=220, margin=dict(l=10,r=10,t=30,b=10))
+            fig.update_layout(height=220, margin=dict(l=10, r=10, t=30, b=10))
             return fig
 
         with d1:
-            st.plotly_chart(gauge(temp, "Temperature °C", [0,50], "#e05252",
-                [{"range":[0,20],"color":"#cce5ff"},{"range":[20,35],"color":"#d4edda"},{"range":[35,50],"color":"#f8d7da"}]),
+            st.plotly_chart(gauge(temp, "Temperature °C", [0, 50], "#e05252",
+                [{"range": [0, 20], "color": "#cce5ff"}, {"range": [20, 35], "color": "#d4edda"}, {"range": [35, 50], "color": "#f8d7da"}]),
                 use_container_width=True)
         with d2:
-            st.plotly_chart(gauge(humidity, "Humidity %", [0,100], "#4a90d9",
-                [{"range":[0,40],"color":"#e2e3e5"},{"range":[40,70],"color":"#d4edda"},{"range":[70,100],"color":"#cce5ff"}]),
+            st.plotly_chart(gauge(humidity, "Humidity %", [0, 100], "#4a90d9",
+                [{"range": [0, 40], "color": "#e2e3e5"}, {"range": [40, 70], "color": "#d4edda"}, {"range": [70, 100], "color": "#cce5ff"}]),
                 use_container_width=True)
         with d3:
             ph_col = "#52b788" if 5.5 <= ph <= 7.5 else "#e76f51"
-            st.plotly_chart(gauge(ph, "Soil pH", [3,9], ph_col,
-                [{"range":[3,5.5],"color":"#f8d7da"},{"range":[5.5,7.5],"color":"#d4edda"},{"range":[7.5,9],"color":"#fff3cd"}]),
+            st.plotly_chart(gauge(ph, "Soil pH", [3, 9], ph_col,
+                [{"range": [3, 5.5], "color": "#f8d7da"}, {"range": [5.5, 7.5], "color": "#d4edda"}, {"range": [7.5, 9], "color": "#fff3cd"}]),
                 use_container_width=True)
         with d4:
-            st.plotly_chart(gauge(rainfall, "Rainfall mm", [0,500], "#4895ef",
-                [{"range":[0,100],"color":"#fff3cd"},{"range":[100,250],"color":"#d4edda"},{"range":[250,500],"color":"#cce5ff"}]),
+            st.plotly_chart(gauge(rainfall, "Rainfall mm", [0, 500], "#4895ef",
+                [{"range": [0, 100], "color": "#fff3cd"}, {"range": [100, 250], "color": "#d4edda"}, {"range": [250, 500], "color": "#cce5ff"}]),
                 use_container_width=True)
 
         radar_col, bar_col = st.columns(2)
         with radar_col:
             fig_npk = go.Figure(go.Scatterpolar(
-                r=[N,P,K,N], theta=["Nitrogen (N)","Phosphorus (P)","Potassium (K)","Nitrogen (N)"],
+                r=[N, P, K, N],
+                theta=["Nitrogen (N)", "Phosphorus (P)", "Potassium (K)", "Nitrogen (N)"],
                 fill="toself", line_color="#2d6a4f", fillcolor="rgba(45,106,79,0.25)",
             ))
             fig_npk.update_layout(
-                polar=dict(radialaxis=dict(visible=True, range=[0, max(150,N,P,K)+10])),
-                showlegend=False, title={"text":"Soil NPK Balance","x":0.5},
-                height=300, margin=dict(l=30,r=30,t=50,b=30),
+                polar=dict(radialaxis=dict(visible=True, range=[0, max(150, N, P, K) + 10])),
+                showlegend=False, title={"text": "Soil NPK Balance", "x": 0.5},
+                height=300, margin=dict(l=30, r=30, t=50, b=30),
             )
             st.plotly_chart(fig_npk, use_container_width=True)
 
         with bar_col:
             crop_labels = [get_display_name(c) for c in top_n_crops]
-            conf_pcts   = [p*100 for p in top_n_probs]
-            colors      = ["#2d6a4f" if i==0 else "#74c69d" for i in range(len(crop_labels))]
+            conf_pcts   = [p * 100 for p in top_n_probs]
+            colors      = ["#2d6a4f" if i == 0 else "#74c69d" for i in range(len(crop_labels))]
             fig_bar = go.Figure(go.Bar(
                 x=conf_pcts, y=crop_labels, orientation="h",
-                marker_color=colors, text=[f"{c:.1f}%" for c in conf_pcts], textposition="outside",
+                marker_color=colors,
+                text=[f"{c:.1f}%" for c in conf_pcts], textposition="outside",
             ))
             fig_bar.update_layout(
-                title={"text":"AI Confidence Scores","x":0.5},
-                xaxis=dict(range=[0,105], title="Confidence %"),
+                title={"text": "AI Confidence Scores", "x": 0.5},
+                xaxis=dict(range=[0, 105], title="Confidence %"),
                 yaxis=dict(autorange="reversed"),
-                height=300, margin=dict(l=10,r=40,t=50,b=40),
+                height=300, margin=dict(l=10, r=40, t=50, b=40),
             )
             st.plotly_chart(fig_bar, use_container_width=True)
         st.divider()
 
-    # ── UPGRADE 6B: Fertilizer Prescription ──────────────────────────────────
+    # ── Fertilizer Prescription ───────────────────────────────────────────────
     st.subheader(T("fert_title"))
     st.markdown(T("fert_desc"))
 
@@ -1128,22 +1357,21 @@ if predict_btn:
     else:
         req = fert["required"]
         f1, f2, f3 = st.columns(3)
-
         with f1:
-            deficit = fert["deficit_N"]
-            status_n = "normal" if deficit == 0 else "inverse"
+            deficit  = fert["deficit_N"]
             st.metric(label=f"🟡 {T('nitrogen')}", value=f"{N} kg/ha",
-                      delta=f"Need {req['N']} | Deficit: {deficit}", delta_color=status_n)
+                      delta=f"Need {req['N']} | Deficit: {deficit}",
+                      delta_color="normal" if deficit == 0 else "inverse")
         with f2:
-            deficit = fert["deficit_P"]
-            status_p = "normal" if deficit == 0 else "inverse"
+            deficit  = fert["deficit_P"]
             st.metric(label=f"🟠 {T('phosphorus')}", value=f"{P} kg/ha",
-                      delta=f"Need {req['P']} | Deficit: {deficit}", delta_color=status_p)
+                      delta=f"Need {req['P']} | Deficit: {deficit}",
+                      delta_color="normal" if deficit == 0 else "inverse")
         with f3:
-            deficit = fert["deficit_K"]
-            status_k = "normal" if deficit == 0 else "inverse"
+            deficit  = fert["deficit_K"]
             st.metric(label=f"🔵 {T('potassium')}", value=f"{K} kg/ha",
-                      delta=f"Need {req['K']} | Deficit: {deficit}", delta_color=status_k)
+                      delta=f"Need {req['K']} | Deficit: {deficit}",
+                      delta_color="normal" if deficit == 0 else "inverse")
 
         st.markdown('<div class="fert-card">', unsafe_allow_html=True)
         st.markdown("**Prescription (per hectare):**")
@@ -1167,7 +1395,7 @@ if predict_btn:
 
     st.divider()
 
-    # ── UPGRADE 6C: Market & Economics Forecaster ─────────────────────────────
+    # ── Market & Economics Forecaster ─────────────────────────────────────────
     st.subheader(T("market_title"))
     market = get_market_forecast(best_crop)
 
@@ -1176,23 +1404,20 @@ if predict_btn:
     m2.metric(T("market_yield"),   f"{market['yield_q_ha']} q",   T("per_ha"))
     m3.metric(T("market_revenue"), f"₹{market['revenue']:,}",     T("per_ha"))
     m4.metric(T("market_cost"),    f"₹{market['input_cost']:,}",  T("per_ha"))
-    profit_color = "normal" if market["net_profit"] > 0 else "inverse"
     m5.metric(T("market_profit"),  f"₹{market['net_profit']:,}",
-              f"ROI: {market['roi_pct']}%", delta_color=profit_color)
+              f"ROI: {market['roi_pct']}%",
+              delta_color="normal" if market["net_profit"] > 0 else "inverse")
 
     st.markdown('<div class="market-card">', unsafe_allow_html=True)
-
-    # Profit waterfall chart
     fig_waterfall = go.Figure(go.Waterfall(
-        name="Economics",
-        orientation="v",
+        name="Economics", orientation="v",
         measure=["relative", "relative", "total"],
         x=[T("market_revenue"), f"- {T('market_cost')}", T("market_profit")],
         y=[market["revenue"], -market["input_cost"], 0],
         connector={"line": {"color": "rgba(63,63,63,.4)"}},
         increasing={"marker": {"color": "#2d6a4f"}},
         decreasing={"marker": {"color": "#e05252"}},
-        totals={"marker": {"color": "#4895ef"}},
+        totals={"marker":    {"color": "#4895ef"}},
         text=[f"₹{market['revenue']:,}", f"-₹{market['input_cost']:,}", f"₹{market['net_profit']:,}"],
         textposition="outside",
     ))
@@ -1207,16 +1432,19 @@ if predict_btn:
 
     st.divider()
 
-    # ── Optional: History Table ───────────────────────────────────────────────
+    # ── History Table ─────────────────────────────────────────────────────────
     if show_history:
         st.subheader(T("history_title"))
         if "history" not in st.session_state:
             st.session_state.history = []
         st.session_state.history.append({
             T("district_lbl"): district,
-            "Temp (°C)": temp, "Humidity %": humidity,
-            "pH": ph, "Rainfall mm": rainfall,
-            "Top Pick": best_label, "Confidence": f"{best_conf:.1f}%",
+            "Temp (°C)":   temp,
+            "Humidity %":  humidity,
+            "pH":          ph,
+            "Rainfall mm": rainfall,
+            "Top Pick":    best_label,
+            "Confidence":  f"{best_conf:.1f}%",
         })
         st.dataframe(pd.DataFrame(st.session_state.history), use_container_width=True, hide_index=True)
         if st.button(T("clear_history")):
@@ -1246,13 +1474,13 @@ if predict_btn:
     # ── Input Summary ─────────────────────────────────────────────────────────
     with st.expander(T("input_summary")):
         summary = {
-            T("district_lbl"):  district,
-            T("temperature"):   temp,
-            T("humidity"):      humidity,
-            T("nitrogen"):      N,
-            T("phosphorus"):    P,
-            T("potassium"):     K,
-            T("soil_ph"):       ph,
-            T("rainfall_mm"):   rainfall,
+            T("district_lbl"): district,
+            T("temperature"):  temp,
+            T("humidity"):     humidity,
+            T("nitrogen"):     N,
+            T("phosphorus"):   P,
+            T("potassium"):    K,
+            T("soil_ph"):      ph,
+            T("rainfall_mm"):  rainfall,
         }
         st.table(pd.DataFrame.from_dict(summary, orient="index", columns=[T("value")]))
