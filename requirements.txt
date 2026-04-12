@@ -7,3 +7,4 @@ plotly
 fpdf2
 deep-translator
 pillow
+huggingface_hub
