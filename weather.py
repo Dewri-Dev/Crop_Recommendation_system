@@ -8,8 +8,7 @@ load_dotenv()
 
 def get_live_weather(city_name):
     """Fetches live temperature and humidity for a given city."""
-    api_key = "d5455bca1b684b756d6aaad8233f25da"
-    print(api_key)
+    api_key = os.getenv("WEATHER_API_KEY", "d5455bca1b684b756d6aaad8233f25da")
     
     if not api_key:
         return None, None, "API Key is missing! Check your .env file."

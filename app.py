@@ -1,9 +1,3 @@
-"""
-Assam Crop Recommendation System — v4.0
-Fixes: with-block ternary error, duplicate _pdf_safe, emoji in Helvetica PDF
-Upgrades: modern UI with cards, gradients, animated metrics, better layout
-"""
-
 import streamlit as st
 import streamlit.components.v1 as components
 import requests, pickle, numpy as np, plotly.graph_objects as go
@@ -50,7 +44,10 @@ UI_TEXT = {
         "weather_error":"Weather API Error","best_fit":"Best fit for conditions in",
         "best_fit2":"based on soil, weather & season.",
         "real_photo":"Real photo","ai_matched":"AI matched","based_on":"based on soil pH",
-        "live_weather":"live weather","exp_rainfall":"mm rainfall.",
+        "live_weather":"live weather","exp_rainfall_prefix":"Expected rainfall:","exp_rainfall_suffix":"mm rainfall.",
+        "Loamy / Alluvial":"Loamy / Alluvial","Sandy / Riverbank":"Sandy / Riverbank","Clay":"Clay","Red Laterite":"Red Laterite",
+        "Tea Garden Soil":"Tea Garden Soil","Hill / Forest Loam":"Hill / Forest Loam","Peaty / Waterlogged":"Peaty / Waterlogged","Sandy Loam":"Sandy Loam",
+        "Pre-Monsoon  (Mar – May)":"Pre-Monsoon (Mar-May)","Monsoon      (Jun – Sep)":"Monsoon (Jun-Sep)","Post-Monsoon (Oct – Nov)":"Post-Monsoon (Oct-Nov)","Winter       (Dec – Feb)":"Winter (Dec-Feb)",
         "hist_align":"Conditions align with historical Assam growing data.",
         "nitrogen":"Nitrogen (N)","phosphorus":"Phosphorus (P)","potassium":"Potassium (K)",
         "soil_ph":"Soil pH","rainfall_mm":"Rainfall (mm)","temperature":"Temperature (C)",
@@ -94,7 +91,10 @@ UI_TEXT = {
         "weather_error":"বতৰ API ত্ৰুটি","best_fit":"ইয়াত সৰ্বোত্তম",
         "best_fit2":"মাটি, বতৰ আৰু ঋতুৰ ওপৰত ভিত্তি কৰি।",
         "real_photo":"প্ৰকৃত ফটো","ai_matched":"AI এ মিলাইছে","based_on":"মাটিৰ pH",
-        "live_weather":"লাইভ বতৰ","exp_rainfall":"mm বৃষ্টিপাত।",
+        "live_weather":"লাইভ বতৰ","exp_rainfall_prefix":"প্ৰত্যাশিত বৃষ্টিপাত:","exp_rainfall_suffix":"mm বৃষ্টিপাত।",
+        "Loamy / Alluvial":"দোমোজা / পলসুৱা মাটি","Sandy / Riverbank":"বালিয়া / নদীৰ পাৰৰ মাটি","Clay":"বোকা / আলতীয়া মাটি","Red Laterite":"ৰঙা লেটাৰাইট মাটি",
+        "Tea Garden Soil":"চাহ বাগিচাৰ মাটি","Hill / Forest Loam":"পাহাৰীয়া / হাবিৰ মাটি","Peaty / Waterlogged":"পিটি / জলমগ্ন মাটি","Sandy Loam":"বালিয়া পলসুৱা মাটি",
+        "Pre-Monsoon  (Mar – May)":"প্ৰাক-মৌচমী (মাৰ্চ – মে')","Monsoon      (Jun – Sep)":"মৌচমী (জুন – ছেপ্টেম্বৰ)","Post-Monsoon (Oct – Nov)":"উত্তৰ-মৌচমী (অক্টোবৰ – নৱেম্বৰ)","Winter       (Dec – Feb)":"শীতকাল (ডিচেম্বৰ – ফেব্ৰুৱাৰী)",
         "hist_align":"এই অৱস্থাসমূহ অসমত ঐতিহাসিক ডেটাৰ সৈতে মিলে।",
         "nitrogen":"নাইট্ৰজেন (N)","phosphorus":"ফছফৰাছ (P)","potassium":"পটাছিয়াম (K)",
         "soil_ph":"মাটিৰ pH","rainfall_mm":"বৃষ্টিপাত (mm)","temperature":"তাপমাত্ৰা (C)",
@@ -232,11 +232,11 @@ def render_tts_player(text, lang="en"):
     preview   = text[:80] + "…" if len(text) > 80 else text
     components.html(f"""
 <div style="display:flex;align-items:center;gap:10px;padding:.65rem 1rem;
-     background:rgba(46,139,87,.08);border:1px solid rgba(46,139,87,.2);
+     background:rgba(37,99,235,.08);border:1px solid rgba(37,99,235,.2);
      border-radius:12px;font-size:13px;font-family:sans-serif;margin-top:8px;">
   <button onclick="ttsPlay()" title="Play"
-    style="min-width:38px;height:38px;border-radius:50%;border:2px solid #2d6a4f;
-           background:#2d6a4f;color:white;cursor:pointer;font-size:16px;flex-shrink:0;">&#9654;</button>
+    style="min-width:38px;height:38px;border-radius:50%;border:2px solid #2563eb;
+           background:#2563eb;color:white;cursor:pointer;font-size:16px;flex-shrink:0;">&#9654;</button>
   <button onclick="window.speechSynthesis.cancel()" title="Stop"
     style="min-width:38px;height:38px;border-radius:50%;border:2px solid #ccc;
            background:white;color:#555;cursor:pointer;font-size:16px;flex-shrink:0;">&#9632;</button>
@@ -413,7 +413,7 @@ def create_pdf_report(district, crop_name, confidence, temp, humidity, ph,
     def sn(sz=12): pdf.set_font(FN, size=sz)
     def sb(sz=12): pdf.set_font(FB, style="B" if lang=="en" else "", size=sz)
 
-    sb(20); pdf.set_text_color(46,139,87)
+    sb(20); pdf.set_text_color(37,99,235)
     pdf.cell(0,15,S(t["pdf_report"]),ln=True,align='C'); pdf.ln(3)
     sn(12); pdf.set_text_color(0,0,0)
     pdf.cell(0,10,S(f"{t['pdf_date']}: {datetime.date.today().strftime('%B %d, %Y')}"),ln=True)
@@ -639,7 +639,7 @@ if "lang" not in st.session_state:
 
 with st.sidebar:
     st.markdown("""
-    <div style="background:linear-gradient(135deg,#1a472a,#2d6a4f);padding:18px 16px;
+    <div style="background:linear-gradient(135deg,#1e3a8a,#2563eb);padding:18px 16px;
          border-radius:12px;margin-bottom:12px;text-align:center;">
       <div style="font-size:28px;margin-bottom:4px;">🌾</div>
       <div style="color:white;font-size:16px;font-weight:600;letter-spacing:.5px;">Assam Crop Advisor</div>
@@ -652,7 +652,16 @@ with st.sidebar:
     st.divider()
 
     with st.expander(f"📍 {T('location_hdr')}", expanded=True):
-        district = st.text_input(T("district"), value="Guwahati",
+        _ASSAM_LOCATIONS = [
+            "Baksa", "Barpeta", "Biswanath", "Bongaigaon", "Cachar", "Charaideo", 
+            "Chirang", "Darrang", "Dhemaji", "Dhubri", "Dibrugarh", "Dima Hasao", 
+            "Goalpara", "Golaghat", "Hailakandi", "Hojai", "Jorhat", "Kamrup", 
+            "Kamrup Metropolitan", "Karbi Anglong", "Karimganj", "Kokrajhar", 
+            "Lakhimpur", "Majuli", "Morigaon", "Nagaon", "Nalbari", "Sivasagar", 
+            "Sonitpur", "South Salmara-Mankachar", "Tinsukia", "Udalguri", "West Karbi Anglong",
+            "Guwahati", "Silchar", "Tezpur", "Diphu"
+        ]
+        district = st.selectbox(T("district"), options=sorted(_ASSAM_LOCATIONS), index=sorted(_ASSAM_LOCATIONS).index("Guwahati"),
                                   help="Used to fetch live temperature & humidity")
 
     with st.expander(f"⚙️ {T('input_mode_hdr')}", expanded=True):
@@ -692,10 +701,10 @@ html, body, [class*="css"] { font-family: 'Plus Jakarta Sans', sans-serif; }
 
 /* ── Main crop card ── */
 .crop-card {
-    background: linear-gradient(135deg, #0d2b18 0%, #1a472a 40%, #2d6a4f 100%);
+    background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 40%, #2563eb 100%);
     border-radius: 20px; padding: 2rem 2.25rem; color: white; margin: 1rem 0;
     border: 1px solid rgba(255,255,255,.08);
-    box-shadow: 0 8px 32px rgba(26,71,42,.35);
+    box-shadow: 0 8px 32px rgba(30,58,138,.35);
     position: relative; overflow: hidden;
 }
 .crop-card::before {
@@ -720,12 +729,12 @@ html, body, [class*="css"] { font-family: 'Plus Jakarta Sans', sans-serif; }
 /* ── Metric pills ── */
 .metric-pill {
     display:inline-flex; align-items:center; gap:.4rem;
-    background:rgba(45,106,79,.10); border:1px solid rgba(45,106,79,.22);
+    background:rgba(37,99,235,.10); border:1px solid rgba(37,99,235,.22);
     border-radius:30px; padding:.4rem 1rem;
     font-size:.82rem; font-weight:500; margin:3px 2px;
     transition: background .2s;
 }
-.metric-pill:hover { background:rgba(45,106,79,.18); }
+.metric-pill:hover { background:rgba(37,99,235,.18); }
 
 /* ── Section cards ── */
 .section-card {
@@ -759,14 +768,14 @@ html, body, [class*="css"] { font-family: 'Plus Jakarta Sans', sans-serif; }
 }
 .stat-row:last-child { border-bottom:none; }
 .stat-label { color:#666; }
-.stat-value { font-weight:600; color:#1a472a; }
+.stat-value { font-weight:600; color:#1e3a8a; }
 .stat-value.profit { color:#1a6b3c; font-size:1.05rem; }
 .stat-value.cost   { color:#b03a2e; }
 
 /* ── Confidence bar ── */
 .conf-bar-wrap { margin-top:8px; }
-.conf-bar-bg { background:#e8f5e9; border-radius:8px; height:10px; overflow:hidden; }
-.conf-bar-fill { background:linear-gradient(90deg,#2d6a4f,#52b788); height:10px; border-radius:8px; transition:width .8s ease; }
+.conf-bar-bg { background:#eff6ff; border-radius:8px; height:10px; overflow:hidden; }
+.conf-bar-fill { background:linear-gradient(90deg,#2563eb,#60a5fa); height:10px; border-radius:8px; transition:width .8s ease; }
 
 /* ── Sidebar tweaks ── */
 section[data-testid="stSidebar"] > div { padding-top: 1rem !important; }
@@ -792,16 +801,16 @@ simple_mode = T("simple") in input_mode
 if simple_mode:
     col1, col2 = st.columns(2)
     with col1:
-        soil_type = st.selectbox(T("soil_type"), list(soil_properties.keys()))
+        soil_type = st.selectbox(T("soil_type"), list(soil_properties.keys()), format_func=T)
         ph_v = soil_properties[soil_type]['ph']
         st.markdown(f'<div style="font-size:.82rem;color:#666;margin-top:4px;">'
                     f'pH {ph_v} &nbsp;·&nbsp; N={soil_properties[soil_type]["N"]} '
                     f'&nbsp;·&nbsp; P={soil_properties[soil_type]["P"]} '
                     f'&nbsp;·&nbsp; K={soil_properties[soil_type]["K"]}</div>', unsafe_allow_html=True)
     with col2:
-        season = st.selectbox(T("season"), list(season_rainfall.keys()))
+        season = st.selectbox(T("season"), list(season_rainfall.keys()), format_func=T)
         st.markdown(f'<div style="font-size:.82rem;color:#666;margin-top:4px;">'
-                    f'Expected rainfall: {season_rainfall[season]} mm</div>', unsafe_allow_html=True)
+                    f'{T("exp_rainfall_prefix")} {season_rainfall[season]} {T("exp_rainfall_suffix")}</div>', unsafe_allow_html=True)
 
     detected = st.session_state.get("detected_crop")
     if detected and detected != "unknown":
@@ -824,13 +833,12 @@ else:
     with c3:
         K = st.number_input(T("potassium"), 0, 150, 50)
     npk_sum = N + P + K
-    if npk_sum > 0:
-        if N/npk_sum > 0.6:
-            st.markdown('<div class="alert-banner">⚠️ High nitrogen — may favour leafy crops over fruiting ones.</div>', unsafe_allow_html=True)
-        if ph < 4.5:
-            st.markdown('<div class="alert-banner">⚠️ Highly acidic (pH < 4.5). Consider liming before planting.</div>', unsafe_allow_html=True)
-        elif ph > 8.0:
-            st.markdown('<div class="alert-banner">⚠️ Alkaline soil (pH > 8). May limit nutrient uptake.</div>', unsafe_allow_html=True)
+    if npk_sum > 0 and (N/npk_sum) > 0.6:
+        st.markdown('<div class="alert-banner">⚠️ High nitrogen — may favour leafy crops over fruiting ones.</div>', unsafe_allow_html=True)
+    if ph < 4.5:
+        st.markdown('<div class="alert-banner">⚠️ Highly acidic (pH < 4.5). Consider liming before planting.</div>', unsafe_allow_html=True)
+    elif ph > 8.0:
+        st.markdown('<div class="alert-banner">⚠️ Alkaline soil (pH > 8). May limit nutrient uptake.</div>', unsafe_allow_html=True)
 
 st.markdown("")
 predict_btn = st.button(T("predict_btn"), type="primary", use_container_width=True)
@@ -917,15 +925,15 @@ if predict_btn:
             rank = ["🥇","🥈","🥉","4️⃣","5️⃣","6️⃣","7️⃣"][i]
             pct_i = int(top_n_probs[i]*100)
             st.markdown(f"""
-            <div style="background:{'rgba(45,106,79,.06)' if i==0 else 'rgba(0,0,0,.02)'};
-                 border:1px solid {'rgba(45,106,79,.2)' if i==0 else 'rgba(0,0,0,.07)'};
+            <div style="background:{'rgba(37,99,235,.06)' if i==0 else 'rgba(0,0,0,.02)'};
+                 border:1px solid {'rgba(37,99,235,.2)' if i==0 else 'rgba(0,0,0,.07)'};
                  border-radius:14px;padding:1rem;text-align:center;height:100%;">
               <div style="font-size:1.4rem;">{rank}</div>
               <div style="font-weight:600;font-size:.9rem;margin:.4rem 0;">{nm}</div>
-              <div style="font-size:1.3rem;font-weight:700;color:{'#1a472a' if i==0 else '#444'};">{pct_i}%</div>
+              <div style="font-size:1.3rem;font-weight:700;color:{'#1e3a8a' if i==0 else '#444'};">{pct_i}%</div>
               <div style="font-size:.75rem;color:#888;margin-top:4px;">{ci['icon']} {ci['season']}</div>
-              <div style="background:#e8f5e9;border-radius:6px;height:6px;margin-top:8px;overflow:hidden;">
-                <div style="background:#2d6a4f;height:6px;width:{pct_i}%;border-radius:6px;"></div>
+              <div style="background:#eff6ff;border-radius:6px;height:6px;margin-top:8px;overflow:hidden;">
+                <div style="background:#2563eb;height:6px;width:{pct_i}%;border-radius:6px;"></div>
               </div>
             </div>""", unsafe_allow_html=True)
     st.divider()
@@ -954,7 +962,7 @@ if predict_btn:
             [{"range":[0,40],"color":"#f1f5f9"},{"range":[40,70],"color":"#dcfce7"},{"range":[70,100],"color":"#dbeafe"}]),
             use_container_width=True)
         with d3:
-            pc = "#2d6a4f" if 5.5<=ph<=7.5 else "#e76f51"
+            pc = "#2563eb" if 5.5<=ph<=7.5 else "#e76f51"
             st.plotly_chart(gauge(ph,"Soil pH",[3,9],pc,
                 [{"range":[3,5.5],"color":"#fee2e2"},{"range":[5.5,7.5],"color":"#dcfce7"},{"range":[7.5,9],"color":"#fef9c3"}]),
                 use_container_width=True)
@@ -966,8 +974,8 @@ if predict_btn:
         with rc:
             fig = go.Figure(go.Scatterpolar(
                 r=[N,P,K,N], theta=["Nitrogen","Phosphorus","Potassium","Nitrogen"],
-                fill="toself", line_color="#2d6a4f", fillcolor="rgba(45,106,79,.15)",
-                mode="lines+markers", marker=dict(color="#2d6a4f",size=8)))
+                fill="toself", line_color="#2563eb", fillcolor="rgba(37,99,235,.15)",
+                mode="lines+markers", marker=dict(color="#2563eb",size=8)))
             fig.update_layout(polar=dict(radialaxis=dict(visible=True,range=[0,max(150,N,P,K)+10],
                               tickfont=dict(size=10)),angularaxis=dict(tickfont=dict(size=11))),
                 showlegend=False, title={"text":"Soil NPK Balance","x":.5,"font":{"size":14}},
@@ -977,7 +985,7 @@ if predict_btn:
         with bc:
             clabels = [get_display_name(c) for c in top_n_crops]
             cpcts   = [p*100 for p in top_n_probs]
-            colors  = ["#1a472a" if i==0 else "#52b788" for i in range(len(clabels))]
+            colors  = ["#1e3a8a" if i==0 else "#60a5fa" for i in range(len(clabels))]
             fig = go.Figure(go.Bar(x=cpcts, y=clabels, orientation="h",
                 marker=dict(color=colors, cornerradius=6),
                 text=[f"{c:.1f}%" for c in cpcts], textposition="outside",
@@ -1061,7 +1069,7 @@ if predict_btn:
         x=["Revenue","Input Cost","Net Profit"],
         y=[market["revenue"], -market["input_cost"], 0],
         connector={"line":{"color":"rgba(0,0,0,.15)","width":1}},
-        increasing={"marker":{"color":"#2d6a4f","line":{"color":"#1a472a","width":1}}},
+        increasing={"marker":{"color":"#2563eb","line":{"color":"#1e3a8a","width":1}}},
         decreasing={"marker":{"color":"#e05252","line":{"color":"#c0392b","width":1}}},
         totals={"marker":{"color":"#2463ae","line":{"color":"#1a4f8a","width":1}}},
         text=[f"Rs.{market['revenue']:,}", f"-Rs.{market['input_cost']:,}", f"Rs.{market['net_profit']:,}"],
