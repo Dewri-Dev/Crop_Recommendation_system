@@ -784,12 +784,26 @@ def _placeholder(crop_name):
 
 @st.cache_data(ttl=86400, show_spinner=False)
 def fetch_crop_image(crop_name):
-    key=crop_name.lower().replace(" ","_")
-    img=_wiki_infobox(key)
-    if img: return img,True
-    img=_wiki_search(crop_name)
-    if img: return img,True
-    return _placeholder(crop_name),False
+    key = crop_name.lower().replace(" ","_")
+    
+    # 1. Check local images folder first
+    for ext in [".jpg", ".jpeg", ".png", ".webp"]:
+        local_path = os.path.join("images", f"{key}{ext}")
+        if os.path.exists(local_path):
+            try:
+                with open(local_path, "rb") as f:
+                    return f.read(), True
+            except Exception:
+                pass
+
+    # 2. Fallback to Wikipedia
+    img = _wiki_infobox(key)
+    if img: return img, True
+    img = _wiki_search(crop_name)
+    if img: return img, True
+    
+    # 3. Placeholder
+    return _placeholder(crop_name), False
 
 
 # ─── Model & Crop Info ────────────────────────────────────────────────────────
