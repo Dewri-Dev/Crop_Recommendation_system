@@ -50,6 +50,7 @@ UI_TEXT = {
         "Pre-Monsoon  (Mar – May)":"Pre-Monsoon (Mar-May)","Monsoon      (Jun – Sep)":"Monsoon (Jun-Sep)","Post-Monsoon (Oct – Nov)":"Post-Monsoon (Oct-Nov)","Winter       (Dec – Feb)":"Winter (Dec-Feb)",
         "hist_align":"Conditions align with historical Assam growing data.",
         "nitrogen":"Nitrogen (N)","phosphorus":"Phosphorus (P)","potassium":"Potassium (K)",
+        "npk_title":"Soil NPK Balance","npk_desc":"Soil NPK balance represents the levels of Nitrogen (N), Phosphorus (P), and Potassium (K) in your soil. These are the three primary nutrients essential for healthy crop growth and high yields.",
         "soil_ph":"Soil pH","rainfall_mm":"Rainfall (mm)","temperature":"Temperature (C)",
         "humidity":"Humidity (%)","district_lbl":"District","value":"Value",
         "pdf_report":"AI Crop Recommendation Report","pdf_date":"Date Generated",
@@ -65,6 +66,7 @@ UI_TEXT = {
         "listen_btn":"Listen to recommendation",
         "presc_header":"Prescription (per hectare)",
         "urea_label":"Urea (46% N)","dap_label":"DAP (18N+46P)","mop_label":"MOP (60% K)",
+        "cam_toggle":"Use Camera Input",
     },
     "as": {
         "title":"🌾 অসম শস্য পৰামৰ্শ প্ৰণালী","subtitle":"অসম কৃষকৰ বাবে AI-চালিত শস্য পৰামৰ্শ",
@@ -97,6 +99,7 @@ UI_TEXT = {
         "Pre-Monsoon  (Mar – May)":"প্ৰাক-মৌচমী (মাৰ্চ – মে')","Monsoon      (Jun – Sep)":"মৌচমী (জুন – ছেপ্টেম্বৰ)","Post-Monsoon (Oct – Nov)":"উত্তৰ-মৌচমী (অক্টোবৰ – নৱেম্বৰ)","Winter       (Dec – Feb)":"শীতকাল (ডিচেম্বৰ – ফেব্ৰুৱাৰী)",
         "hist_align":"এই অৱস্থাসমূহ অসমত ঐতিহাসিক ডেটাৰ সৈতে মিলে।",
         "nitrogen":"নাইট্ৰজেন (N)","phosphorus":"ফছফৰাছ (P)","potassium":"পটাছিয়াম (K)",
+        "npk_title":"মাটিৰ NPK সন্তুলন","npk_desc":"মাটিৰ NPK সন্তুলনে আপোনাৰ মাটিত থকা নাইট্ৰজেন (N), ফছফৰাছ (P) আৰু পটাছিয়ামৰ (K) মাত্ৰাক সূচায়। এই তিনিটা মুখ্য পুষ্টি উপাদান শস্যৰ স্বাস্থ্যকৰ বৃদ্ধি আৰু অধিক উৎপাদনৰ বাবে অপৰিহাৰ্য।",
         "soil_ph":"মাটিৰ pH","rainfall_mm":"বৃষ্টিপাত (mm)","temperature":"তাপমাত্ৰা (C)",
         "humidity":"আৰ্দ্ৰতা (%)","district_lbl":"জিলা","value":"মান",
         "pdf_report":"AI শস্য পৰামৰ্শ প্ৰতিবেদন","pdf_date":"উৎপাদনৰ তাৰিখ",
@@ -112,6 +115,7 @@ UI_TEXT = {
         "listen_btn":"পৰামৰ্শ শুনক",
         "presc_header":"প্ৰেচক্ৰিপচন (প্ৰতি হেক্টৰ)",
         "urea_label":"ইউৰিয়া (46% N)","dap_label":"DAP (18N+46P)","mop_label":"MOP (60% K)",
+        "cam_toggle":"কেমেৰা ব্যৱহাৰ কৰক",
     }
 }
 
@@ -643,7 +647,7 @@ with st.sidebar:
          border-radius:12px;margin-bottom:12px;text-align:center;">
       <div style="font-size:28px;margin-bottom:4px;">🌾</div>
       <div style="color:white;font-size:16px;font-weight:600;letter-spacing:.5px;">Assam Crop Advisor</div>
-      <div style="color:rgba(255,255,255,.6);font-size:11px;margin-top:2px;">v4.0 · Powered by Random Forest ML</div>
+      <div style="color:rgba(255,255,255,.6);font-size:11px;margin-top:2px;">Right crop, right time, maximum yield.</div>
     </div>""", unsafe_allow_html=True)
 
     st.radio(T("lang_toggle"), options=["en","as"],
@@ -675,11 +679,18 @@ with st.sidebar:
     st.divider()
 
     with st.expander(f"📷 {T('cam_header')}", expanded=False):
-        cam_img = st.camera_input(T("cam_take")) or st.file_uploader(
+        use_cam = st.toggle(T("cam_toggle"), value=False)
+        cam_img = None
+        if use_cam:
+            cam_img = st.camera_input(T("cam_take"))
+        
+        up_img = st.file_uploader(
             T("cam_upload"), type=["jpg","jpeg","png","webp"], key="cam_upload_widget")
-        if cam_img:
+        
+        final_img = cam_img or up_img
+        if final_img:
             with st.spinner(T("cam_detecting")):
-                result = identify_crop_from_image(cam_img.getvalue())
+                result = identify_crop_from_image(final_img.getvalue())
             if result["confidence"] > 0 and result["crop_key"] != "unknown":
                 st.success(f"{T('cam_detected')}: **{result['display_name']}** ({result['confidence']}%)")
                 if result.get("disease"):
@@ -701,27 +712,28 @@ html, body, [class*="css"] { font-family: 'Plus Jakarta Sans', sans-serif; }
 
 /* ── Main crop card ── */
 .crop-card {
-    background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 40%, #2563eb 100%);
-    border-radius: 20px; padding: 2rem 2.25rem; color: white; margin: 1rem 0;
-    border: 1px solid rgba(255,255,255,.08);
-    box-shadow: 0 8px 32px rgba(30,58,138,.35);
+    background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+    border-radius: 20px; padding: 2rem 2.25rem; color: #0f172a; margin: 1rem 0;
+    border: 1px solid #bae6fd;
+    box-shadow: 0 4px 20px rgba(0,0,0,.05);
     position: relative; overflow: hidden;
 }
 .crop-card::before {
     content:""; position:absolute; top:-60px; right:-60px;
     width:200px; height:200px; border-radius:50%;
-    background:rgba(255,255,255,.04);
+    background:rgba(37,99,235,.03);
 }
 .crop-card::after {
     content:""; position:absolute; bottom:-80px; left:30%;
     width:300px; height:300px; border-radius:50%;
-    background:rgba(255,255,255,.03);
+    background:rgba(37,99,235,.02);
 }
 .crop-card .badge {
-    display:inline-block; background:rgba(255,255,255,.15);
-    border:1px solid rgba(255,255,255,.25); border-radius:30px;
+    display:inline-block; background:rgba(37,99,235,.1);
+    border:1px solid rgba(37,99,235,.2); border-radius:30px;
     padding:4px 14px; font-size:11px; font-weight:600;
     letter-spacing:.08em; text-transform:uppercase; margin-bottom:12px;
+    color: #2563eb;
 }
 .crop-card h2 { margin:0 0 .35rem 0; font-size:2.2rem; font-weight:700; line-height:1.2; }
 .crop-card p  { margin:0; opacity:.75; font-size:.92rem; }
@@ -940,14 +952,14 @@ if predict_btn:
 
     # ── Environmental dashboard ───────────────────────────────────────────────
     if show_dashboard:
-        st.markdown(f"### {T('env_analysis')}")
+        st.markdown(f'<h3 style="color: #0f172a;">{T("env_analysis")}</h3>', unsafe_allow_html=True)
         d1, d2, d3, d4 = st.columns(4)
 
         def gauge(val, title, rng, color, steps):
             fig = go.Figure(go.Indicator(mode="gauge+number", value=val,
                 title={"text":title,"font":{"size":13,"color":"#444"}},
-                number={"font":{"size":26,"color":"#222"}},
-                gauge={"axis":{"range":rng,"tickcolor":"#aaa"},
+                number={"font":{"size":26,"color":"#0f172a"}},
+                gauge={"axis":{"range":rng,"tickcolor":"#888","tickfont":{"color":"#888"}},
                        "bar":{"color":color,"thickness":.25},
                        "bgcolor":"rgba(0,0,0,0)","borderwidth":0,
                        "steps":steps}))
@@ -973,15 +985,19 @@ if predict_btn:
         rc, bc = st.columns(2)
         with rc:
             fig = go.Figure(go.Scatterpolar(
-                r=[N,P,K,N], theta=["Nitrogen","Phosphorus","Potassium","Nitrogen"],
+                r=[N,P,K,N], theta=[T("nitrogen"), T("phosphorus"), T("potassium"), T("nitrogen")],
                 fill="toself", line_color="#2563eb", fillcolor="rgba(37,99,235,.15)",
                 mode="lines+markers", marker=dict(color="#2563eb",size=8)))
-            fig.update_layout(polar=dict(radialaxis=dict(visible=True,range=[0,max(150,N,P,K)+10],
-                              tickfont=dict(size=10)),angularaxis=dict(tickfont=dict(size=11))),
-                showlegend=False, title={"text":"Soil NPK Balance","x":.5,"font":{"size":14}},
+            fig.update_layout(
+                polar=dict(
+                    radialaxis=dict(visible=True, range=[0,max(150,N,P,K)+10], tickfont=dict(size=10, color="black")),
+                    angularaxis=dict(tickfont=dict(size=11, color="black"))
+                ),
+                showlegend=False, title={"text":T("npk_title"),"x":.5,"font":{"size":14,"color":"black"}},
                 height=300, margin=dict(l=30,r=30,t=50,b=20),
                 paper_bgcolor="rgba(0,0,0,0)")
             st.plotly_chart(fig, use_container_width=True)
+            st.markdown(f'<div style="font-size:0.85rem; color:#444; padding:0 10px;">{T("npk_desc")}</div>', unsafe_allow_html=True)
         with bc:
             clabels = [get_display_name(c) for c in top_n_crops]
             cpcts   = [p*100 for p in top_n_probs]
