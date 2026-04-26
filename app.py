@@ -218,7 +218,13 @@ def identify_crop_from_image(img_bytes):
 # ═══════════════════════════════════════════════════════════════════════════════
 # TTS PLAYER
 # ═══════════════════════════════════════════════════════════════════════════════
-def build_tts_summary(crop_name, fert, market, lang="en"):
+def build_tts_summary(crop_name, fert, market, lang="en", crop_key=None):
+    if crop_key in CROP_FACTS:
+        fact = CROP_FACTS[crop_key].get(lang, CROP_FACTS[crop_key]["en"])
+        if lang == "as":
+            return f"{crop_name}ৰ বিষয়ে কিছু তথ্য: {fact}"
+        return f"Few facts about {crop_name}: {fact}"
+
     if lang == "as":
         return (f"শীৰ্ষ পৰামৰ্শিত শস্য: {crop_name}। "
                 f"ইউৰিয়া {fert['urea_kg']} কেজি, DAP {fert['dap_kg']} কেজি, "
@@ -497,6 +503,221 @@ _CROP_DISPLAY_NAMES = {
     "dhekia_xaak":"Dhekia Xaak (Edible Fern)","manimuni":"Manimuni (Pennywort)",
     "local_brinjal":"Local Brinjal","local_pumpkin":"Local Pumpkin",
     "local_beans":"Local Beans","bamboo_shoot":"Bamboo Shoot","assam_tea":"Assam Tea",
+}
+
+CROP_FACTS = {
+    "rice": {
+        "en": "Rice is the staple food of Assam and is deeply rooted in our culture and festivals like Bihu.",
+        "as": "ধান অসমৰ মুখ্য খাদ্য শস্য আৰু আমাৰ সংস্কৃতি তথা বিহুৰ দৰে উৎসৱৰ সৈতে ই ওতঃপ্ৰোতভাৱে জড়িত।"
+    },
+    "wheat": {
+        "en": "Wheat is an important Rabi crop in Assam, providing a healthy alternative to rice in our daily diet.",
+        "as": "ঘেঁহু অসমৰ এটা গুৰুত্বপূৰ্ণ ৰবি শস্য, যিয়ে আমাৰ দৈনন্দিন আহাৰত ভাতৰ এক স্বাস্থ্যকৰ বিকল্প প্ৰদান কৰে।"
+    },
+    "maize": {
+        "en": "Maize is a versatile crop used for food, fodder, and industrial products across Assam.",
+        "as": "মাকৈ এবিধ বহুমুখী শস্য যাক অসমত খাদ্য, পশুখাদ্য আৰু ঔদ্যোগিক সামগ্ৰীৰ বাবে ব্যৱহাৰ কৰা হয়।"
+    },
+    "jute": {
+        "en": "Jute is known as the 'Golden Fiber' and is an eco-friendly crop that improves soil fertility.",
+        "as": "মৰাপাটক 'সোণালী আঁহ' বুলি কোৱা হয় আৰু ই এক পৰিৱেশ অনুকূল শস্য যিয়ে মাটিৰ উৰ্বৰতা বৃদ্ধি কৰে।"
+    },
+    "assam_tea": {
+        "en": "Assam is the world's largest tea-growing region, producing full-bodied, malty black teas.",
+        "as": "অসম বিশ্বৰ সৰ্ববৃহৎ চাহ উৎপাদনকাৰী অঞ্চল, যিয়ে উন্নত মানৰ ক'লা চাহ উৎপাদন কৰে।"
+    },
+    "mustard": {
+        "en": "Mustard is a major oilseed in Assam, painting our fields beautiful yellow during the winter.",
+        "as": "সৰিয়হ অসমৰ এক প্ৰধান তৈলবীজ শস্য, যিয়ে শীতকালত আমাৰ পথাৰবোৰ হালধীয়া ৰঙেৰে সজাই তোলে।"
+    },
+    "sugarcane": {
+        "en": "Sugarcane is widely used in Assam to produce traditional jaggery or 'Gur' during the winter months.",
+        "as": "শীতকালত পৰম্পৰাগত গুৰ উৎপাদনৰ বাবে অসমত কুঁহিয়াৰৰ ব্যাপক ব্যৱহাৰ কৰা হয়।"
+    },
+    "cotton": {
+        "en": "Cotton cultivation has a long history in the hills and plains of Assam, supporting our traditional weaving industry.",
+        "as": "অসমৰ পাহাৰ আৰু ভৈয়ামত কপাহ খেতিৰ এক দীঘলীয়া ইতিহাস আছে, যিয়ে আমাৰ পৰম্পৰাগত বোৱা-কটা উদ্যোগক সহায় কৰে।"
+    },
+    "banana": {
+        "en": "Assam has a rich diversity of bananas, including the nutrient-rich Bhim Kol variety.",
+        "as": "অসমত ভীম কলৰ দৰে পুষ্টিকৰ প্ৰজাতিৰ লগতে বিভিন্ন প্ৰকাৰৰ কল পোৱা যায়।"
+    },
+    "mango": {
+        "en": "Assamese mangoes are known for their sweet aroma and variety, often used in making traditional pickles.",
+        "as": "অসমৰ আম ইয়াৰ মিঠা সুবাস আৰু বিভিন্ন প্ৰকাৰৰ বাবে জনাজাত, যিবোৰ প্ৰায়ে পৰম্পৰাগত আচাৰ বনাবলৈ ব্যৱহাৰ কৰা হয়।"
+    },
+    "chickpea": {
+        "en": "Chickpeas are a valuable source of protein and are grown as a Rabi crop in the drier regions of Assam.",
+        "as": "বুট মাহ প্ৰটিনৰ এক মূল্যৱান উৎস আৰু অসমৰ শুকান অঞ্চলবোৰত ৰবি শস্য হিচাপে খেতি কৰা হয়।"
+    },
+    "lentil": {
+        "en": "Lentils or 'Masur Dal' are a common part of the Assamese meal, rich in fiber and protein.",
+        "as": "মচুৰ মাহ অসমীয়া আহাৰৰ এক সাধাৰণ অংশ, যি ফাইবাৰ আৰু প্ৰটিনত চহকী।"
+    },
+    "papaya": {
+        "en": "Papaya grows easily in the backyards of Assam and is used both as a fruit and a vegetable in traditional dishes like Khar.",
+        "as": "অমিতা অসমৰ বাৰীত সহজে গজে আৰু ইয়াক ফল তথা খাৰৰ দৰে পৰম্পৰাগত ব্যঞ্জনত পাছলি হিচাপেও ব্যৱহাৰ কৰা হয়।"
+    },
+    "coconut": {
+        "en": "Coconut trees are common in lower Assam, providing water, oil, and ingredients for traditional sweets like Laroo.",
+        "as": "নামনি অসমত নাৰিকল গছ অতি সুলভ, যাৰ পৰা পানী, তেল আৰু লাডুৰ দৰে পৰম্পৰাগত মিঠাইৰ বাবে উপাদান পোৱা যায়।"
+    },
+    "pomegranate": {
+        "en": "Pomegranates are increasingly grown in home gardens in Assam for their health-boosting antioxidants.",
+        "as": "স্বাস্থ্যৰ বাবে উপকাৰী এন্টিঅক্সিডেন্টৰ বাবে অসমৰ ঘৰুৱা বাগিচাবোৰত ডালিমৰ খেতি বৃদ্ধি পাইছে।"
+    },
+    "grapes": {
+        "en": "Grape cultivation is being explored in certain micro-climates of Assam as a high-value horticultural crop.",
+        "as": "অসমৰ কিছুমান বিশেষ জলবায়ু অঞ্চলত এক উচ্চ মূল্যৰ উদ্যান শস্য হিচাপে আঙুৰ খেতিৰ সম্ভাৱনীয়তা পৰীক্ষা কৰা হৈছে।"
+    },
+    "watermelon": {
+        "en": "Watermelons from the riverine 'Char' areas of Assam are highly sought after during the hot summer months.",
+        "as": "অসমৰ চৰ অঞ্চলৰ তৰমুজ গৰমৰ দিনবোৰত অতি জনপ্ৰিয়।"
+    },
+    "muskmelon": {
+        "en": "Muskmelons are grown in the sandy soils of the Brahmaputra valley, offering a refreshing summer treat.",
+        "as": "ব্ৰহ্মপুত্ৰ উপত্যকাৰ বালিচহীয়া মাটিত ফুটি খেতি কৰা হয়, যি গৰমৰ দিনত এক সতেজতা প্ৰদান কৰে।"
+    },
+    "orange": {
+        "en": "The oranges of Kamrup and Tinsukia districts are famous for their juicy sweetness and vibrant color.",
+        "as": "কামৰূপ আৰু তিনিচুকীয়া জিলাৰ সুমথিৰা টেঙা ইয়াৰ ৰসাল সোৱাদ আৰু উজ্জ্বল ৰঙৰ বাবে বিখ্যাত।"
+    },
+    "apple": {
+        "en": "Apples are being trial-grown in the higher altitudes of Dima Hasao and Karbi Anglong districts.",
+        "as": "ডিমা হাছাও আৰু কাৰ্বি আংলং জিলাৰ ওখ অঞ্চলবোৰত আপেলৰ পৰীক্ষামূলক খেতি কৰা হৈছে।"
+    },
+    "mungbean": {
+        "en": "Mung beans or 'Mogu Mah' are light and nutritious, often served during religious and social gatherings.",
+        "as": "মগু মাহ পাতল আৰু পুষ্টিকৰ, যি প্ৰায়ে ধৰ্মীয় আৰু সামাজিক অনুষ্ঠানবোৰত পৰিৱেশন কৰা হয়।"
+    },
+    "mothbeans": {
+        "en": "Moth beans are drought-resistant pulses that can grow in the drier patches of the state.",
+        "as": "মথ বীন হ'ল খৰাং প্ৰতিৰোধী মাহজাতীয় শস্য যি ৰাজ্যখনৰ শুকান অঞ্চলবোৰত গজিব পাৰে।"
+    },
+    "pigeonpeas": {
+        "en": "Pigeon peas or 'Arhar Dal' are a sturdy crop providing essential nutrients to the rural population.",
+        "as": "অৰহৰ মাহ এবিধ শক্তিশালী শস্য যিয়ে গ্ৰাম্য জনসংখ্যাক প্ৰয়োজনীয় পুষ্টি প্ৰদান কৰে।"
+    },
+    "kidneybeans": {
+        "en": "Kidney beans or 'Rajma' are grown in the hilly terrains of Assam and are loved for their rich taste.",
+        "as": "ৰাজমাহ অসমৰ পাহাৰীয়া অঞ্চলত খেতি কৰা হয় আৰু ইয়াৰ সোৱাদৰ বাবে সকলোৱে ভাল পায়।"
+    },
+    "blackgram": {
+        "en": "Black gram or 'Mati Mah' is an essential ingredient for the traditional Assamese Khar dish.",
+        "as": "মাটি মাহ অসমীয়াৰ পৰম্পৰাগত খাৰ ব্যঞ্জনৰ এক অপৰিহাৰ্য উপাদান।"
+    },
+    "coffee": {
+        "en": "Coffee cultivation is gaining momentum in the hill districts of Assam, offering a new livelihood option.",
+        "as": "অসমৰ পাহাৰীয়া জিলাবোৰত কফি খেতিয়ে জনপ্ৰিয়তা লাভ কৰিছে, যি এক নতুন জীৱিকাৰ পথ মুকলি কৰিছে।"
+    },
+    "joha_rice": {
+        "en": "Joha rice is a unique aromatic rice variety of Assam, known for its exquisite taste and scent.",
+        "as": "জোহা ধান অসমৰ এক অনন্য সুগন্ধি ধানৰ প্ৰজাতি, যি ইয়াৰ সুস্বাদু সোৱাদ আৰু সুবাসৰ বাবে জনাজাত।"
+    },
+    "joha_rice72": {
+        "en": "Joha Rice 72 is an improved variety that retains the classic aroma while offering better yields.",
+        "as": "জোহা ধান ৭২ হ'ল এক উন্নত প্ৰজাতি যিয়ে পৰম্পৰাগত সুবাস অটুট ৰখাৰ লগতে অধিক উৎপাদন প্ৰদান কৰে।"
+    },
+    "bao_rice": {
+        "en": "Bao rice is a deep-water paddy variety that can grow even during the high floods of Assam.",
+        "as": "বাও ধান হ'ল এক দ-পানীৰ ধানৰ প্ৰজাতি যি অসমৰ বৰষুণ আৰু বানপানীৰ মাজতো গজিব পাৰে।"
+    },
+    "bora_rice": {
+        "en": "Bora rice is a glutinous variety used to make traditional Pithas and Jolpan in Assamese households.",
+        "as": "বৰা ধান হ'ল এবিধ আঠাযুক্ত ধান যাৰ পৰা অসমীয়া উৰহৰ পিঠা আৰু জলপান তৈয়াৰ কৰা হয়।"
+    },
+    "chokuwa_rice": {
+        "en": "Chokuwa rice, also known as 'Magic Rice', is unique because it can be eaten just by soaking in water.",
+        "as": "চকুৱা ধান বা 'ম্যাজিক ৰাইচ'ৰ বৈশিষ্ট্য হ'ল ইয়াক কেৱল পানীত তিয়াই থৈয়ে খাব পাৰি।"
+    },
+    "komal_saul": {
+        "en": "Komal Saul is a specially processed rice that becomes soft and edible when soaked, requiring no cooking.",
+        "as": "কোমল চাউল হ'ল এক বিশেষভাৱে প্ৰস্তুত কৰা চাউল যাক সিজোৱাৰ প্ৰয়োজন নাই, কেৱল তিয়াই থৈ খাব পাৰি।"
+    },
+    "xaaj_rice": {
+        "en": "Xaaj rice is a traditional variety used primarily in the brewing of indigenous Assamese rice beer.",
+        "as": "সাঁজ ধান হ'ল এক পৰম্পৰাগত ধানৰ প্ৰজাতি যাক মূলতঃ থলুৱা অসমীয়া লাওপানী বা সাঁজ প্ৰস্তুত কৰিবলৈ ব্যৱহাৰ কৰা হয়।"
+    },
+    "apong_rice": {
+        "en": "Apong rice is a specialty variety used by tribal communities for preparing traditional ceremonial drinks.",
+        "as": "আপং ধান হ'ল এক বিশেষ ধানৰ প্ৰজাতি যি জনজাতীয় সম্প্ৰদায়ৰ মাজত পৰম্পৰাগত পানীয় প্ৰস্তুত কৰিবলৈ ব্যৱহাৰ কৰা হয়।"
+    },
+    "bhut_jolokia": {
+        "en": "Bhut Jolokia is one of the world's hottest chili peppers and is native to Northeast India.",
+        "as": "ভোট জলকীয়া বিশ্বৰ অন্যতম জ্বলা জলকীয়া আৰু ই উত্তৰ-পূব ভাৰতৰ থলুৱা প্ৰজাতি।"
+    },
+    "kaji_nemu": {
+        "en": "Kaji Nemu is the state fruit of Assam, famous for its unique scent and high juice content.",
+        "as": "কাজী নেমু অসমৰ ৰাজ্যিক ফল, যি ইয়াৰ অনন্য সুবাস আৰু অধিক ৰসৰ বাবে বিখ্যাত।"
+    },
+    "ou_tenga": {
+        "en": "Ou Tenga or Elephant Apple is a sour fruit used in Assamese fish curries and dal for its tangy flavor.",
+        "as": "ঔ টেঙা হ'ল এবিধ টেঙা ফল যাক ইয়াৰ বিশেষ সোৱাদৰ বাবে মাছৰ আঞ্জা আৰু দাইলত ব্যৱহাৰ কৰা হয়।"
+    },
+    "thekera": {
+        "en": "Thekera is a dried sour fruit used as a natural coolant and for its medicinal properties in Assamese cuisine.",
+        "as": "থেকেৰা হ'ল এবিধ শুকুৱাই ৰখা টেঙা ফল যাক প্ৰাকৃতিক শীতলকাৰক হিচাপে আৰু ইয়াৰ ঔষধি গুণৰ বাবে ব্যৱহাৰ কৰা হয়।"
+    },
+    "amlokhi": {
+        "en": "Amlokhi or Indian Gooseberry is a powerhouse of Vitamin C, often used in pickles and traditional medicine.",
+        "as": "আমলখি হ'ল ভিটামিন চি-ৰ এক ভাণ্ডাৰ, যাক প্ৰায়ে আচাৰ আৰু পৰম্পৰাগত ঔষধত ব্যৱহাৰ কৰা হয়।"
+    },
+    "bogori": {
+        "en": "Bogori or Indian Jujube is a popular seasonal fruit in Assam, loved in both raw and pickled forms.",
+        "as": "বগৰী অসমৰ এক জনপ্ৰিয় ঋতুভিত্তিক ফল, যাক কেঁচাই বা আচাৰ হিচাপে খোৱা হয়।"
+    },
+    "leteku": {
+        "en": "Leteku is a small, sweet and sour wild fruit found in the forests of Assam during the summer.",
+        "as": "লেতেকু হ'ল অসমৰ হাবিত পোৱা এবিধ সৰু, মিঠা-টেঙা বনৰীয়া ফল যি গ্ৰীষ্মকালত উপলব্ধ হয়।"
+    },
+    "jalpai": {
+        "en": "Jalpai or Indian Olive is a tangy fruit used to make delicious sweet and sour pickles in Assam.",
+        "as": "জলফাই হ'ল এবিধ টেঙা ফল যাৰ পৰা অসমত সুস্বাদু মিঠা-টেঙা আচাৰ তৈয়াৰ কৰা হয়।"
+    },
+    "areca_nut": {
+        "en": "Areca nut or 'Tamul' is a symbol of hospitality in Assam, always offered to guests with betel leaf.",
+        "as": "তামোল অসমীয়া অতিথি পৰায়ণতাৰ প্ৰতীক, যি সদায় আলহীক পাণৰ সৈতে আগবঢ়োৱা হয়।"
+    },
+    "betel_leaf": {
+        "en": "Betel leaf or 'Paan' is an integral part of Assamese social life and traditional rituals.",
+        "as": "পাণ অসমীয়া সামাজিক জীৱন আৰু পৰম্পৰাগত ৰীতি-নীতিৰ এক অবিচ্ছেদ্য অংশ।"
+    },
+    "kola_banana": {
+        "en": "Kola Banana is a local variety whose skin is burned to make 'Kharola', a key ingredient in traditional Khar.",
+        "as": "কোলা কল হ'ল এক থলুৱা প্ৰজাতি যাৰ বাকলি পুৰি 'খাৰণি' তৈয়াৰ কৰা হয়, যি খাৰ ব্যঞ্জনৰ এক মুখ্য উপাদান।"
+    },
+    "lai_xaak": {
+        "en": "Lai Xaak or Mustard Greens are a winter favorite in Assam, often cooked with pork or small fish.",
+        "as": "লাই শাক শীতকালত অসমৰ এক প্ৰিয় খাদ্য, যাক প্ৰায়ে গাহৰিৰ মাংস বা সৰু মাছৰ সৈতে ৰন্ধা হয়।"
+    },
+    "kosu": {
+        "en": "Kosu or Taro is a versatile vegetable in Assam, with its leaves, stems, and roots all being edible.",
+        "as": "কচু অসমৰ এক বহুমুখী পাছলি, যাৰ পাত, ঠাৰি আৰু শিপা সকলো খাব পাৰি।"
+    },
+    "dhekia_xaak": {
+        "en": "Dhekia Xaak is an edible fern collected from the wild, known for its crisp texture and health benefits.",
+        "as": "ঢেকীয়া শাক হ'ল হাবিত পোৱা এবিধ বনশাক, যি ইয়াৰ কুৰকুৰীয়া সোৱাদ আৰু স্বাস্থ্যকৰ গুণৰ বাবে জনাজাত।"
+    },
+    "manimuni": {
+        "en": "Manimuni or Pennywort is a medicinal herb used in Assamese households to treat stomach ailments.",
+        "as": "মণিমুনি হ'ল এবিধ ঔষধি গুণসম্পন্ন বনশাক যাক পেটৰ অসুখ নিৰাময়ৰ বাবে ব্যৱহাৰ কৰা হয়।"
+    },
+    "local_brinjal": {
+        "en": "Local brinjals in Assam come in various shapes and sizes, celebrated for their tender taste in pitikas.",
+        "as": "অসমৰ থলুৱা বেঙেনা বিভিন্ন আকাৰৰ পোৱা যায় আৰু ই পিটিকাত বহুত সোৱাদ দিয়ে।"
+    },
+    "local_pumpkin": {
+        "en": "Local pumpkins are grown in almost every rural backyard in Assam, used in various sweet and savory dishes.",
+        "as": "অসমৰ প্ৰতিখন গাঁৱৰে বাৰীত ৰঙালাউ খেতি কৰা হয়, যাক বিভিন্ন মিঠা আৰু জ্বলা ব্যঞ্জনত ব্যৱহাৰ কৰা হয়।"
+    },
+    "local_beans": {
+        "en": "Local beans are a rich source of protein and are a common sight in the winter vegetable markets of Assam.",
+        "as": "থলুৱা লেচেৰা বা বীন প্ৰটিনৰ এক চহকী উৎস আৰু অসমৰ শীতকালীন বজাৰত যথেষ্ট পৰিমাণে পোৱা যায়।"
+    },
+    "bamboo_shoot": {
+        "en": "Bamboo shoots or 'Khorisa' are a delicacy in Assam, adding a unique fermented flavor to meats and curries.",
+        "as": "বাঁহৰ গাজ বা 'খৰিচা' অসমীয়া খাদ্যৰ এক বিশেষ সোৱাদ, যিয়ে মাংস আৰু আঞ্জাত এক সুকীয়া আমেজ প্ৰদান কৰে।"
+    }
 }
 def get_display_name(k): return _CROP_DISPLAY_NAMES.get(k, k.replace("_"," ").title())
 
@@ -922,7 +1143,8 @@ if predict_btn:
         st.markdown(f"**{T('listen_btn')}**")
         render_tts_player(
             build_tts_summary(best_label, fert_preview, market_preview,
-                              lang=st.session_state.get("lang","en")),
+                              lang=st.session_state.get("lang","en"),
+                              crop_key=best_crop),
             lang=st.session_state.get("lang","en"))
 
     st.divider()
