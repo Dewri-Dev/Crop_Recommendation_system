@@ -13,7 +13,7 @@ from weather import get_live_weather
 from logic.fertilizer import calculate_fertilizer_prescription
 from logic.market import get_market_forecast
 from logic.pdf_generator import create_pdf_report
-from services.gemini_service import identify_crop_from_image
+from services.local_vision_service import identify_crop_offline
 from services.wikipedia_service import fetch_crop_image
 from utils.logger import logger
 from utils.database import init_db, save_report, get_all_reports, clear_all_reports
@@ -386,7 +386,7 @@ with st.sidebar:
         final_img = cam_img or up_img
         if final_img:
             with st.spinner(T("cam_detecting")):
-                result = identify_crop_from_image(final_img.getvalue(), CROP_DATA)
+                result = identify_crop_offline(final_img.getvalue(), CROP_DATA)
             if result["confidence"] > 0 and result["crop_key"] != "unknown":
                 st.success(f"{T('cam_detected')}: **{result['display_name']}** ({result['confidence']}%)")
                 if result.get("disease"):

@@ -18,3 +18,40 @@
 2026-05-09 14:18:29 - assam_crop_advisor - INFO - Local image not found for kaji_nemu, fetching from Wikipedia...
 2026-05-09 14:18:30 - assam_crop_advisor - INFO - Found Wikipedia infobox image for kaji_nemu
 2026-05-09 14:18:30 - assam_crop_advisor - INFO - Report saved to database for Guwahati: kaji_nemu
+2026-05-09 16:13:42 - assam_crop_advisor - INFO - Starting image scraping for custom vision model...
+2026-05-09 16:13:42 - assam_crop_advisor - INFO - Searching images for: Bhut Jolokia plant (Saving to data/image_dataset\bhut_jolokia/)
+2026-05-09 16:15:42 - assam_crop_advisor - INFO - Successfully downloaded 47 images for bhut_jolokia.
+2026-05-09 16:15:45 - assam_crop_advisor - INFO - Searching images for: Kaji Nemu plant (Saving to data/image_dataset\kaji_nemu/)
+2026-05-09 16:17:11 - assam_crop_advisor - INFO - Successfully downloaded 47 images for kaji_nemu.
+2026-05-09 16:17:14 - assam_crop_advisor - INFO - Searching images for: Bao Rice field (Saving to data/image_dataset\bao_rice/)
+2026-05-09 16:22:34 - assam_crop_advisor - INFO - Successfully downloaded 36 images for bao_rice.
+2026-05-09 16:22:37 - assam_crop_advisor - INFO - Searching images for: Joha Rice field (Saving to data/image_dataset\joha_rice/)
+2026-05-09 16:25:03 - assam_crop_advisor - INFO - Successfully downloaded 41 images for joha_rice.
+2026-05-09 16:25:06 - assam_crop_advisor - INFO - Searching images for: Assam Tea garden (Saving to data/image_dataset\assam_tea_garden/)
+2026-05-09 16:26:37 - assam_crop_advisor - INFO - Successfully downloaded 48 images for assam_tea_garden.
+2026-05-09 16:26:40 - assam_crop_advisor - INFO - Searching images for: Areca Nut tree Assam (Saving to data/image_dataset\areca_nut/)
+2026-05-09 16:27:58 - assam_crop_advisor - INFO - Successfully downloaded 49 images for areca_nut.
+2026-05-09 16:28:01 - assam_crop_advisor - INFO - Searching images for: Betel Leaf plant (Saving to data/image_dataset\betel_leaf/)
+2026-05-09 16:28:02 - assam_crop_advisor - ERROR - Error scraping Betel Leaf plant: https://duckduckgo.com/i.js?o=json&q=Betel+Leaf+plant&l=us-en&vqd=4-106028955705706151985531257723175270975&p=1&f=%2C%2C%2C%2C%2C 403 Ratelimit
+2026-05-09 16:28:05 - assam_crop_advisor - INFO - Searching images for: Elephant Apple tree Ou Tenga (Saving to data/image_dataset\elephant_apple_ou_tenga/)
+2026-05-09 16:28:07 - assam_crop_advisor - ERROR - Error scraping Elephant Apple tree Ou Tenga: https://duckduckgo.com/i.js?o=json&q=Elephant+Apple+tree+Ou+Tenga&l=us-en&vqd=4-126778424988575711671425524046598355700&p=1&f=%2C%2C%2C%2C%2C 403 Ratelimit
+2026-05-09 16:28:10 - assam_crop_advisor - INFO - Scraping complete. Dataset saved to data/image_dataset/
+2026-05-09 16:47:19 - assam_crop_advisor - INFO - Database initialized successfully.
+2026-05-09 16:47:27 - assam_crop_advisor - INFO - Database initialized successfully.
+2026-05-09 16:47:29 - assam_crop_advisor - WARNING - WEATHER_API_KEY not found in .env, using fallback key.
+2026-05-09 16:47:29 - assam_crop_advisor - INFO - Weather fetched for Guwahati: 30.95°C, 66% humidity
+2026-05-09 16:47:29 - assam_crop_advisor - INFO - Prediction generated for Guwahati: kaji_nemu (31.0%)
+2026-05-09 16:47:29 - assam_crop_advisor - INFO - Local image not found for kaji_nemu, fetching from Wikipedia...
+2026-05-09 16:47:31 - assam_crop_advisor - INFO - Found Wikipedia infobox image for kaji_nemu
+2026-05-09 16:47:39 - assam_crop_advisor - INFO - Database initialized successfully.
+2026-05-09 16:48:08 - assam_crop_advisor - INFO - Database initialized successfully.
+2026-05-09 16:48:08 - assam_crop_advisor - INFO - Downloading ImageNet labels...
+2026-05-09 16:48:09 - assam_crop_advisor - INFO - Loading pre-trained vision model: mobilenetv3_large_100.ra_in1k
+2026-05-09 16:48:13 - assam_crop_advisor - WARNING - AI saw 'Cauliflower' but no system mapping found. Defaulting to rice.
+2026-05-09 16:48:25 - assam_crop_advisor - INFO - Database initialized successfully.
+2026-05-09 16:48:29 - assam_crop_advisor - INFO - Database initialized successfully.
+2026-05-09 16:48:29 - assam_crop_advisor - WARNING - AI saw 'Butternut Squash' but no system mapping found. Defaulting to rice.
+2026-05-09 16:48:33 - assam_crop_advisor - INFO - Database initialized successfully.
+2026-05-09 16:48:41 - assam_crop_advisor - INFO - Database initialized successfully.
+2026-05-09 16:48:41 - assam_crop_advisor - WARNING - AI saw 'Butternut Squash' but no system mapping found. Defaulting to rice.
+2026-05-09 16:48:55 - assam_crop_advisor - INFO - Database initialized successfully.

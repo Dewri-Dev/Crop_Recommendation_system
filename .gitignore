@@ -27,3 +27,6 @@ Thumbs.db
 
 # Jupyter Notebook Checkpoints
 .ipynb_checkpoints/
+
+# Project Memory
+GEMINI.md

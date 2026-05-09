@@ -9,3 +9,6 @@ deep-translator
 pillow
 python-dotenv
 pytest
+torch
+torchvision
+timm
