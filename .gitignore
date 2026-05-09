@@ -2,5 +2,6 @@ myenv/
 __pycache__/
 *.pyc
 .env
+.streamlit/secrets.toml
 .vscode/
 .devcontainer/

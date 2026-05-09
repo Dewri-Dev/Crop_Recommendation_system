@@ -1,0 +1,20 @@
+2026-05-09 14:17:25 - assam_crop_advisor - INFO - Database initialized successfully.
+2026-05-09 14:17:28 - assam_crop_advisor - INFO - Database initialized successfully.
+2026-05-09 14:17:30 - assam_crop_advisor - INFO - Weather fetched for Guwahati: 29.95°C, 66% humidity
+2026-05-09 14:17:30 - assam_crop_advisor - INFO - Prediction generated for Guwahati: kaji_nemu (33.0%)
+2026-05-09 14:17:30 - assam_crop_advisor - INFO - Local image not found for kaji_nemu, fetching from Wikipedia...
+2026-05-09 14:17:32 - assam_crop_advisor - INFO - Found Wikipedia infobox image for kaji_nemu
+2026-05-09 14:17:56 - assam_crop_advisor - INFO - Database initialized successfully.
+2026-05-09 14:17:58 - assam_crop_advisor - INFO - Database initialized successfully.
+2026-05-09 14:17:58 - assam_crop_advisor - INFO - Weather fetched for Guwahati: 29.95°C, 66% humidity
+2026-05-09 14:17:58 - assam_crop_advisor - INFO - Prediction generated for Guwahati: kaji_nemu (33.0%)
+2026-05-09 14:17:58 - assam_crop_advisor - INFO - Local image not found for kaji_nemu, fetching from Wikipedia...
+2026-05-09 14:17:59 - assam_crop_advisor - INFO - Found Wikipedia infobox image for kaji_nemu
+2026-05-09 14:18:22 - assam_crop_advisor - INFO - Database initialized successfully.
+2026-05-09 14:18:28 - assam_crop_advisor - INFO - Database initialized successfully.
+2026-05-09 14:18:29 - assam_crop_advisor - INFO - Database initialized successfully.
+2026-05-09 14:18:29 - assam_crop_advisor - INFO - Weather fetched for Guwahati: 29.95°C, 66% humidity
+2026-05-09 14:18:29 - assam_crop_advisor - INFO - Prediction generated for Guwahati: kaji_nemu (33.0%)
+2026-05-09 14:18:29 - assam_crop_advisor - INFO - Local image not found for kaji_nemu, fetching from Wikipedia...
+2026-05-09 14:18:30 - assam_crop_advisor - INFO - Found Wikipedia infobox image for kaji_nemu
+2026-05-09 14:18:30 - assam_crop_advisor - INFO - Report saved to database for Guwahati: kaji_nemu
