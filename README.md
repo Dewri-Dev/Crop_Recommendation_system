@@ -1,4 +1,4 @@
-# 🌾 Assam Crop Advisor (v5.0)
+# 🌾 Assam Crop Advisor 
 
 [![Python](https://img.shields.io/badge/Python-3.10+-blue.svg)](https://www.python.org/)
 [![Streamlit](https://img.shields.io/badge/UI-Streamlit-FF4B4B.svg)](https://streamlit.io/)
