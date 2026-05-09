@@ -1,7 +1,29 @@
+# Python Virtual Environments
 myenv/
+venv/
+ENV/
+env/
+
+# Python Caches
 __pycache__/
 *.pyc
+*.pyo
+*.pyd
+
+# Environment Variables & Secrets
 .env
 .streamlit/secrets.toml
+
+# Logs & Persistent Data
+logs/
+data/*.db
+
+# IDE & OS Specific
 .vscode/
 .devcontainer/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Jupyter Notebook Checkpoints
+.ipynb_checkpoints/
