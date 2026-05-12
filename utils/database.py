@@ -83,3 +83,35 @@ def clear_all_reports():
         logger.info("All database reports cleared.")
     except Exception as e:
         logger.exception(f"Failed to clear database reports: {e}")
+
+def get_regional_analytics():
+    """Performs complex SQL aggregation to find trends."""
+    try:
+        conn = sqlite3.connect(DB_PATH)
+        conn.row_factory = sqlite3.Row
+        cursor = conn.cursor()
+        
+        # 1. Top Crops Overall
+        cursor.execute('''
+            SELECT crop_name, COUNT(*) as count 
+            FROM reports 
+            GROUP BY crop_name 
+            ORDER BY count DESC 
+            LIMIT 5
+        ''')
+        top_crops = [dict(row) for row in cursor.fetchall()]
+
+        # 2. Activity by District
+        cursor.execute('''
+            SELECT district, COUNT(*) as count 
+            FROM reports 
+            GROUP BY district 
+            ORDER BY count DESC
+        ''')
+        district_stats = [dict(row) for row in cursor.fetchall()]
+
+        conn.close()
+        return {"top_crops": top_crops, "district_stats": district_stats}
+    except Exception as e:
+        logger.exception(f"Analytics query failed: {e}")
+        return {"top_crops": [], "district_stats": []}

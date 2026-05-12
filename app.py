@@ -13,10 +13,10 @@ from weather import get_live_weather
 from logic.fertilizer import calculate_fertilizer_prescription
 from logic.market import get_market_forecast
 from logic.pdf_generator import create_pdf_report
-from services.local_vision_service import identify_crop_offline
+from services.local_vision_service import identify_crop_ai
 from services.wikipedia_service import fetch_crop_image
 from utils.logger import logger
-from utils.database import init_db, save_report, get_all_reports, clear_all_reports
+from utils.database import init_db, save_report, get_all_reports, clear_all_reports, get_regional_analytics
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 load_dotenv()
@@ -115,15 +115,19 @@ def load_models():
 # ═══════════════════════════════════════════════════════════════════════════════
 # UI COMPONENTS
 # ═══════════════════════════════════════════════════════════════════════════════
-def display_top_recommendation(crop_key, crop_label, confidence, temp, humidity, rainfall, ph, N, P, K, district):
+def display_top_recommendation(crop_key, crop_label, confidence, temp, humidity, rainfall, ph, N, P, K, district, source="soil"):
     crop_info = get_crop_info(crop_key)
     image_data, is_real = fetch_crop_image(crop_key, CROP_DATA)
+    
+    # Dynamic UX Text
+    badge_text = T('top_rec') if source == "soil" else "🤖 AI Vision Identification"
+    subtitle_text = f"{T('best_fit')} {district} — {T('best_fit2')}" if source == "soil" else f"Data provided for your scanned crop in {district}."
 
     st.markdown(f"""
     <div class="crop-card">
-      <div class="badge">{T('top_rec')} &nbsp;·&nbsp; {confidence:.1f}% confidence</div>
+      <div class="badge">{badge_text} &nbsp;·&nbsp; {confidence:.1f}% confidence</div>
       <h2>{crop_info['icon']} {crop_label}</h2>
-      <p>{T('best_fit')} {district} — {T('best_fit2')}</p>
+      <p>{subtitle_text}</p>
     </div>""", unsafe_allow_html=True)
 
     img_col, info_col = st.columns([1, 2])
@@ -385,15 +389,27 @@ with st.sidebar:
         
         final_img = cam_img or up_img
         if final_img:
-            with st.spinner(T("cam_detecting")):
-                result = identify_crop_offline(final_img.getvalue(), CROP_DATA)
-            if result["confidence"] > 0 and result["crop_key"] != "unknown":
+            img_bytes = final_img.getvalue()
+            import hashlib
+            img_hash = hashlib.md5(img_bytes).hexdigest()
+            
+            # Only call AI if it's a new image
+            if st.session_state.get("last_img_hash") != img_hash:
+                with st.spinner(T("cam_detecting")):
+                    result = identify_crop_ai(img_bytes, CROP_DATA)
+                st.session_state["last_img_hash"] = img_hash
+                st.session_state["last_img_result"] = result
+                
+                if result.get("confidence", 0) > 0 and result.get("crop_key") != "unknown":
+                    st.session_state["detected_crop"] = result["crop_key"]
+                    st.session_state["detected_conf"] = result["confidence"]
+                    st.session_state["auto_run"] = True
+            
+            result = st.session_state.get("last_img_result", {})
+            if result.get("confidence", 0) > 0 and result.get("crop_key") != "unknown":
                 st.success(f"{T('cam_detected')}: **{result['display_name']}** ({result['confidence']}%)")
-                if result.get("disease"):
-                    st.warning(f"Possible issue: {result['disease']}")
                 if result.get("notes"):
                     st.info(result["notes"])
-                st.session_state["detected_crop"] = result["crop_key"]
             else:
                 st.warning(result.get("notes", T("cam_error")))
 
@@ -548,7 +564,7 @@ predict_btn = st.button(T("predict_btn"), type="primary", use_container_width=Tr
 # ═══════════════════════════════════════════════════════════════════════════════
 # RESULTS
 # ═══════════════════════════════════════════════════════════════════════════════
-if predict_btn:
+if predict_btn or st.session_state.pop("auto_run", False):
     try:
         with st.spinner(T("fetching")):
             try:
@@ -569,6 +585,21 @@ if predict_btn:
             top_n_probs   = probabilities[top_n_indices]
             top_n_crops   = label_encoder.inverse_transform(top_n_indices)
             
+            # ─── Vision Override ───
+            # If a crop was just detected via camera, force it to be the top result
+            detected_crop = st.session_state.get("detected_crop")
+            if detected_crop and detected_crop != "unknown":
+                # Move detected crop to index 0 if it exists in our supported list
+                if detected_crop in top_n_crops:
+                    idx = list(top_n_crops).index(detected_crop)
+                    # Swap with top result
+                    top_n_crops[0], top_n_crops[idx] = top_n_crops[idx], top_n_crops[0]
+                    top_n_probs[0], top_n_probs[idx] = top_n_probs[idx], top_n_probs[0]
+                else:
+                    # If not in top N, replace the first one
+                    top_n_crops[0] = detected_crop
+                    top_n_probs[0] = st.session_state.get("detected_conf", 99.0) / 100.0
+            
             best_crop = top_n_crops[0]
             logger.info(f"Prediction generated for {district}: {best_crop} ({top_n_probs[0]*100:.1f}%)")
 
@@ -580,7 +611,8 @@ if predict_btn:
         best_conf  = top_n_probs[0] * 100
 
         # 1. Top recommendation card
-        display_top_recommendation(best_crop, best_label, best_conf, temp, humidity, rainfall, ph, N, P, K, district)
+        rec_source = "vision" if st.session_state.get("detected_crop") == best_crop else "soil"
+        display_top_recommendation(best_crop, best_label, best_conf, temp, humidity, rainfall, ph, N, P, K, district, source=rec_source)
         st.divider()
 
         # 2. Runner-ups
@@ -600,10 +632,39 @@ if predict_btn:
         market = display_market_economics(best_crop, best_label)
         st.divider()
 
-        # 6. History
+        # 6. Analytics & History
         if show_history:
-            st.markdown(f"### {T('history_title')}")
+            st.divider()
+            st.markdown(f"### 📊 {T('history_title')}")
             
+            # --- NEW: Trends Dashboard ---
+            with st.expander("🌍 Assam Agriculture Trends (Community Data)", expanded=True):
+                analytics = get_regional_analytics()
+                
+                tcol1, tcol2 = st.columns(2)
+                with tcol1:
+                    # Top Crops Chart
+                    if analytics["top_crops"]:
+                        labels = [c["crop_name"] for c in analytics["top_crops"]]
+                        counts = [c["count"] for c in analytics["top_crops"]]
+                        fig = go.Figure(go.Bar(x=labels, y=counts, marker_color="#2563eb"))
+                        fig.update_layout(title="Most Searched Crops", height=300, 
+                                          margin=dict(l=20,r=20,t=40,b=20), paper_bgcolor="rgba(0,0,0,0)")
+                        st.plotly_chart(fig, use_container_width=True)
+                    else:
+                        st.info("Not enough data for crop trends.")
+                        
+                with tcol2:
+                    # District Activity
+                    if analytics["district_stats"]:
+                        df_dist = pd.DataFrame(analytics["district_stats"])
+                        st.markdown("**Activity by District**")
+                        st.dataframe(df_dist, use_container_width=True, hide_index=True)
+                    else:
+                        st.info("Not enough data for district stats.")
+            
+            # --- Existing History Table ---
+            st.markdown("#### Recent Personal Predictions")
             # Save the current prediction to DB
             save_report(district, best_crop, best_label, best_conf, temp, humidity, ph, rainfall, N, P, K, st.session_state.lang)
             

@@ -74,10 +74,18 @@ def _placeholder(crop_name):
     
     label = crop_name.replace("_", " ").title()
     initials = "".join(w[0].upper() for w in label.split()[:2])
+    
+    # Use project-local font if available
+    font_path = "NotoSans-Regular.ttf"
     try:
-        fb = ImageFont.truetype("arial.ttf", 80)
-        fm = ImageFont.truetype("arial.ttf", 52)
-        fs = ImageFont.truetype("arial.ttf", 24)
+        if os.path.exists(font_path):
+            fb = ImageFont.truetype(font_path, 80)
+            fm = ImageFont.truetype(font_path, 52)
+            fs = ImageFont.truetype(font_path, 24)
+        else:
+            fb = ImageFont.truetype("arial.ttf", 80)
+            fm = ImageFont.truetype("arial.ttf", 52)
+            fs = ImageFont.truetype("arial.ttf", 24)
     except:
         fb = fm = fs = ImageFont.load_default()
         
