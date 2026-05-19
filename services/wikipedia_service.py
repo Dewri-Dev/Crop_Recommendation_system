@@ -8,13 +8,13 @@ _IMG_HDR = {"User-Agent": "Mozilla/5.0 Chrome/124 Safari/537", "Accept": "image/
 _SKIP = ["icon", "flag", "map", "logo", "diagram", "svg", "symbol", "coat", "blank", "book",
          "cover", "notebook", "paper", "text", "stamp", "chart", "drawing", "illustration",
          "clipart", "cartoon", "pattern", "background", "wallpaper", "texture", "sample",
-         "template", "placeholder", "generic", "default", "unknown", "wiki", "commons"]
+         "template", "placeholder", "generic", "default", "unknown"]
 _EXTS = (".jpg", ".jpeg", ".png", ".webp")
 
 def _get_img(url):
     try:
         r = requests.get(url, headers=_IMG_HDR, timeout=10, verify=False, allow_redirects=True)
-        if r.status_code == 200 and "image" in r.headers.get("Content-Type", "") and len(r.content) > 10000:
+        if r.status_code == 200 and "image" in r.headers.get("Content-Type", "") and len(r.content) > 5000:
             return r.content
     except Exception as e:
         logger.debug(f"Failed to download image from {url}: {e}")
@@ -22,9 +22,10 @@ def _get_img(url):
     return None
 
 def _clean_url(url):
-    u = url.lower()
-    if not any(u.endswith(e) or (e + "?") in u for e in _EXTS): return False
-    return not any(kw in u for kw in _SKIP)
+    # Only check the filename part to avoid blocking domains like wikimedia.org
+    filename = url.split("/")[-1].lower()
+    if not any(filename.endswith(e) or (e + "?") in filename for e in _EXTS): return False
+    return not any(kw in filename for kw in _SKIP)
 
 def _wiki_infobox(crop_key, crop_data):
     title = crop_data["wiki_titles"].get(crop_key.lower())
