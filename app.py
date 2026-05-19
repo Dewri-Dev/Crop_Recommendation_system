@@ -13,7 +13,7 @@ from weather import get_live_weather
 from logic.fertilizer import calculate_fertilizer_prescription
 from logic.market import get_market_forecast
 from logic.pdf_generator import create_pdf_report
-from services.local_vision_service import identify_crop_ai
+from services.local_vision_service import identify_crop
 from services.wikipedia_service import fetch_crop_image
 from utils.logger import logger
 from utils.database import init_db, save_report, get_all_reports, clear_all_reports, get_regional_analytics
@@ -73,7 +73,7 @@ def render_tts_player(text, lang="en"):
     components.html(f"""
 <div style="display:flex;align-items:center;gap:10px;padding:.65rem 1rem;
      background:rgba(37,99,235,.08);border:1px solid rgba(37,99,235,.2);
-     border-radius:12px;font-size:13px;font-family:sans-serif;margin-top:8px;">
+     border-radius:12px;font-size:13px;font-family: s-serif;margin-top:8px;">
   <button onclick="ttsPlay()" title="Play"
     style="min-width:38px;height:38px;border-radius:50%;border:2px solid #2563eb;
            background:#2563eb;color:white;cursor:pointer;font-size:16px;flex-shrink:0;">&#9654;</button>
@@ -396,7 +396,7 @@ with st.sidebar:
             # Only call AI if it's a new image
             if st.session_state.get("last_img_hash") != img_hash:
                 with st.spinner(T("cam_detecting")):
-                    result = identify_crop_ai(img_bytes, CROP_DATA)
+                    result = identify_crop(img_bytes, CROP_DATA)
                 st.session_state["last_img_hash"] = img_hash
                 st.session_state["last_img_result"] = result
                 
@@ -512,54 +512,90 @@ st.markdown(f"""
   <p style="color:#666;margin:0;font-size:.95rem;">{T('subtitle')}</p>
 </div>""", unsafe_allow_html=True)
 
-st.markdown(f"### {T('soil_header')}")
-simple_mode = T("simple") in input_mode
+tab_advisor, tab_guide = st.tabs([T("advisor_tab"), T("tutorial_tab")])
 
-if simple_mode:
-    col1, col2 = st.columns(2)
-    with col1:
-        soil_type = st.selectbox(T("soil_type"), list(soil_properties.keys()), format_func=T)
-        ph_v = soil_properties[soil_type]['ph']
-        st.markdown(f'<div style="font-size:.82rem;color:#666;margin-top:4px;">'
-                    f'pH {ph_v} &nbsp;·&nbsp; N={soil_properties[soil_type]["N"]} '
-                    f'&nbsp;·&nbsp; P={soil_properties[soil_type]["P"]} '
-                    f'&nbsp;·&nbsp; K={soil_properties[soil_type]["K"]}</div>', unsafe_allow_html=True)
-    with col2:
-        season = st.selectbox(T("season"), list(season_rainfall.keys()), format_func=T)
-        st.markdown(f'<div style="font-size:.82rem;color:#666;margin-top:4px;">'
-                    f'{T("exp_rainfall_prefix")} {season_rainfall[season]} {T("exp_rainfall_suffix")}</div>', unsafe_allow_html=True)
+with tab_advisor:
+    st.markdown(f"### {T('soil_header')}")
+    simple_mode = T("simple") in input_mode
 
-    detected = st.session_state.get("detected_crop")
-    if detected and detected != "unknown":
-        st.info(f"{T('cam_pre_filled')} **{get_display_name(detected)}** — switch to Advanced Mode to use exact values.")
+    if simple_mode:
+        col1, col2 = st.columns(2)
+        with col1:
+            soil_type = st.selectbox(T("soil_type"), list(soil_properties.keys()), format_func=T)
+            ph_v = soil_properties[soil_type]['ph']
+            st.markdown(f'<div style="font-size:.82rem;color:#666;margin-top:4px;">'
+                        f'pH {ph_v} &nbsp;·&nbsp; N={soil_properties[soil_type]["N"]} '
+                        f'&nbsp;·&nbsp; P={soil_properties[soil_type]["P"]} '
+                        f'&nbsp;·&nbsp; K={soil_properties[soil_type]["K"]}</div>', unsafe_allow_html=True)
+        with col2:
+            season = st.selectbox(T("season"), list(season_rainfall.keys()), format_func=T)
+            st.markdown(f'<div style="font-size:.82rem;color:#666;margin-top:4px;">'
+                        f'{T("exp_rainfall_prefix")} {season_rainfall[season]} {T("exp_rainfall_suffix")}</div>', unsafe_allow_html=True)
 
-    N  = soil_properties[soil_type]["N"]
-    P  = soil_properties[soil_type]["P"]
-    K  = soil_properties[soil_type]["K"]
-    ph = soil_properties[soil_type]["ph"]
-    rainfall = season_rainfall[season]
-else:
-    st.info("Enter your soil lab test results. Weather is fetched automatically.")
-    c1, c2, c3 = st.columns(3)
-    with c1:
-        N  = st.number_input(T("nitrogen"),  0, 150, 50)
-        ph = st.slider(T("soil_ph"), 3.0, 9.0, 6.5, 0.1)
-    with c2:
-        P        = st.number_input(T("phosphorus"), 0, 150, 50)
-        rainfall = st.number_input(T("rainfall_mm"), 0.0, 500.0, 200.0)
-    with c3:
-        K = st.number_input(T("potassium"), 0, 150, 50)
-    npk_sum = N + P + K
-    if npk_sum > 0 and (N/npk_sum) > 0.6:
-        st.markdown('<div class="alert-banner">⚠️ High nitrogen — may favour leafy crops over fruiting ones.</div>', unsafe_allow_html=True)
-    if ph < 4.5:
-        st.markdown('<div class="alert-banner">⚠️ Highly acidic (pH < 4.5). Consider liming before planting.</div>', unsafe_allow_html=True)
-    elif ph > 8.0:
-        st.markdown('<div class="alert-banner">⚠️ Alkaline soil (pH > 8). May limit nutrient uptake.</div>', unsafe_allow_html=True)
+        detected = st.session_state.get("detected_crop")
+        if detected and detected != "unknown":
+            st.info(f"{T('cam_pre_filled')} **{get_display_name(detected)}** — switch to Advanced Mode to use exact values.")
 
-st.markdown("")
-predict_btn = st.button(T("predict_btn"), type="primary", use_container_width=True)
+        N  = soil_properties[soil_type]["N"]
+        P  = soil_properties[soil_type]["P"]
+        K  = soil_properties[soil_type]["K"]
+        ph = soil_properties[soil_type]["ph"]
+        rainfall = season_rainfall[season]
+    else:
+        st.info("Enter your soil lab test results. Weather is fetched automatically.")
+        c1, c2, c3 = st.columns(3)
+        with c1:
+            N  = st.number_input(T("nitrogen"),  0, 150, 50)
+            ph = st.slider(T("soil_ph"), 3.0, 9.0, 6.5, 0.1)
+        with c2:
+            P        = st.number_input(T("phosphorus"), 0, 150, 50)
+            rainfall = st.number_input(T("rainfall_mm"), 0.0, 500.0, 200.0)
+        with c3:
+            K = st.number_input(T("potassium"), 0, 150, 50)
+        npk_sum = N + P + K
+        if npk_sum > 0 and (N/npk_sum) > 0.6:
+            st.markdown('<div class="alert-banner">⚠️ High nitrogen — may favour leafy crops over fruiting ones.</div>', unsafe_allow_html=True)
+        if ph < 4.5:
+            st.markdown('<div class="alert-banner">⚠️ Highly acidic (pH < 4.5). Consider liming before planting.</div>', unsafe_allow_html=True)
+        elif ph > 8.0:
+            st.markdown('<div class="alert-banner">⚠️ Alkaline soil (pH > 8). May limit nutrient uptake.</div>', unsafe_allow_html=True)
 
+    st.markdown("")
+    predict_btn = st.button(T("predict_btn"), type="primary", use_container_width=True)
+
+with tab_guide:
+    st.markdown(f"## {T('guide_title')}")
+    
+    g1, g2 = st.columns(2)
+    with g1:
+        st.markdown(f"#### {T('step_1_title')}")
+        st.write(T('step_1_desc'))
+        st.markdown(f"#### {T('step_2_title')}")
+        st.write(T('step_2_desc'))
+    with g2:
+        st.markdown(f"#### {T('step_3_title')}")
+        st.write(T('step_3_desc'))
+        st.markdown(f"#### {T('step_4_title')}")
+        st.write(T('step_4_desc'))
+    
+    st.divider()
+    st.markdown(f"## {T('soil_tutorial_title')}")
+    
+    s1, s2 = st.columns(2)
+    with s1:
+        with st.container(border=True):
+            st.markdown(f"**🌾 {T('Loamy / Alluvial')}**")
+            st.write(T('soil_alluvial_desc'))
+        with st.container(border=True):
+            st.markdown(f"**⛰️ {T('Red Laterite')}**")
+            st.write(T('soil_laterite_desc'))
+    with s2:
+        with st.container(border=True):
+            st.markdown(f"**💧 {T('Clay')}**")
+            st.write(T('soil_clay_desc'))
+        with st.container(border=True):
+            st.markdown(f"**🍵 {T('Tea Garden Soil')}**")
+            st.write(T('soil_tea_desc'))
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # RESULTS

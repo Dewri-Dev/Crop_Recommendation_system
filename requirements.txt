@@ -9,3 +9,5 @@ pillow
 python-dotenv
 tenacity
 urllib3
+torch
+timm

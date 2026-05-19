@@ -119,9 +119,11 @@ def fetch_crop_image(crop_name, crop_data):
         logger.info(f"Found Wikipedia infobox image for {crop_name}")
         return img, True
         
-    img = _wiki_search(crop_name)
+    # NEW: Try search using the display name if the key/wiki_title fails
+    display_name = crop_data.get("display_names", {}).get(key, crop_name)
+    img = _wiki_search(display_name)
     if img: 
-        logger.info(f"Found Wikipedia search image for {crop_name}")
+        logger.info(f"Found Wikipedia search image for {display_name}")
         return img, True
     
     # 3. Placeholder

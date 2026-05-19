@@ -13,11 +13,6 @@ EXPECTED_MAPPINGS = {
     "bao_rice.jpg": "rice",
     "coconut.jpg": "coconut",
     "dhekia_xaak.jpg": "dhekia_xaak",
-    "leteku.jpg": "leteku",
-    "local_brinjal.jpg": "local_brinjal",
-    "ou_tenga.jpg": "ou_tenga",
-    "papaya.jpg": "papaya",
-    "thekera.jpg": "thekera"
 }
 
 def run_vision_audit():

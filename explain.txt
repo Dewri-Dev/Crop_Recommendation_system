@@ -1,0 +1,317 @@
+Crop Recommendation System - Project Explanation Script
+
+Project Name: Assam Crop Advisor / Crop Recommendation System
+
+Short Introduction:
+Good morning/afternoon respected teacher. Our project is a Crop Recommendation System specially designed for farmers. The main aim of this project is to suggest the most suitable crop based on soil nutrients, pH value, weather condition, rainfall, and location.
+
+This project uses Machine Learning for crop prediction, live weather data for temperature and humidity, AI vision for crop image identification, fertilizer recommendation, market profit calculation, PDF report generation, and SQLite database for saving previous reports.
+
+The project is mainly built using Python and Streamlit. The main file of our project is app.py.
+
+
+============================================================
+MEMBER 1: PROJECT INTRODUCTION, UI, AND USER INPUT
+============================================================
+
+My part is to explain the project introduction, user interface, and input system.
+
+Our project is called Assam Crop Advisor or Crop Recommendation System. It is made to help farmers select the best crop according to their soil and environmental condition.
+
+The frontend of the project is built using Streamlit. Streamlit helps us create a web application using Python code. The main frontend and control flow are written in app.py.
+
+When the user opens the application, they can enter different details such as:
+
+1. District
+2. Soil type
+3. Season
+4. Nitrogen value
+5. Phosphorus value
+6. Potassium value
+7. Soil pH value
+8. Crop image using camera or upload option
+
+The district and season help the system understand the local farming condition. The N, P, K, and pH values help the system understand the soil condition.
+
+The application also supports bilingual interface. It supports English and Assamese language. The translation text is stored in config/translations.json. In app.py, the T() function is used to select the correct language text.
+
+Important files in my part:
+
+app.py:
+This is the main file of the project. It controls the user interface, input fields, prediction button, result display, and connection between all modules.
+
+config/translations.json:
+This file stores English and Assamese text for the user interface.
+
+config/crop_data.json:
+This file stores crop-related information like display names, crop facts, fertilizer requirements, and market data.
+
+Simple explanation:
+The user enters soil and location details in the Streamlit interface. Then the application sends these values to the machine learning model and other logic files to generate crop recommendation and extra advice.
+
+Speaking line:
+"My part explains the user interface of the project. The app.py file collects user inputs like district, soil nutrients, pH, season, and image upload. These inputs are then used by the system to recommend the best crop."
+
+
+============================================================
+MEMBER 2: MACHINE LEARNING MODEL AND CROP PREDICTION
+============================================================
+
+My part is to explain the machine learning model and crop prediction process.
+
+The main feature of our project is crop recommendation using Machine Learning. The trained model is stored in the model folder.
+
+Important files in my part:
+
+model/crop_model.pkl:
+This is the trained machine learning model. It is loaded in app.py using pickle.
+
+model/label_encoder.pkl:
+This file converts model output labels into crop names.
+
+data/Crop_recommendation.csv:
+This is the dataset used for crop recommendation. It contains crop data with soil nutrients and environmental values.
+
+notebooks/train_model.ipynb:
+This notebook was used for training the machine learning model.
+
+notebooks/EDA.ipynb:
+This notebook was used for data analysis and understanding the dataset.
+
+The model uses the following inputs:
+
+1. Nitrogen
+2. Phosphorus
+3. Potassium
+4. Temperature
+5. Humidity
+6. pH
+7. Rainfall
+
+In app.py, the model is loaded using the load_models() function. After the user enters the details, the values are converted into a feature array. Then the model predicts the crop.
+
+The project uses predict_proba() to get probability values for different crops. This helps us show the confidence percentage of the prediction. The crop with the highest probability is shown as the top recommended crop.
+
+The application also shows runner-up crops. This means it does not only show one crop, but also shows other possible crops with their confidence scores.
+
+Simple explanation:
+The machine learning model compares the entered soil and weather values with the trained dataset. Based on that, it predicts which crop is most suitable.
+
+Example:
+If the user enters suitable NPK, pH, temperature, humidity, and rainfall values for rice, then the model may recommend rice with high confidence.
+
+Speaking line:
+"My part explains the machine learning model. The model takes N, P, K, temperature, humidity, pH, and rainfall as input. It predicts the most suitable crop and also gives a confidence percentage using predict_proba()."
+
+
+============================================================
+MEMBER 3: LIVE WEATHER, AI VISION, AND EXTERNAL SERVICES
+============================================================
+
+My part is to explain live weather, crop image identification, and external services.
+
+Our project uses live weather data to make the crop recommendation more useful. Weather data is fetched from the OpenWeatherMap API.
+
+Important files in my part:
+
+weather.py:
+This file contains the get_live_weather() function. It takes a city or district name and returns live temperature and humidity.
+
+services/local_vision_service.py:
+This file contains identify_crop_ai(). It identifies a crop from an uploaded image.
+
+services/groq_service.py:
+This file connects with Groq Cloud AI (Llama 4 Vision) for high-performance crop image recognition.
+
+services/wikipedia_service.py:
+This file helps fetch crop images and crop-related visual data.
+
+config/vision_mappings.json:
+This file stores mappings used for crop vision identification.
+
+In weather.py, the API key is loaded from the .env file. The function sends a request to OpenWeatherMap and gets temperature and humidity in metric units.
+
+If weather data is received successfully, the app uses it in the crop prediction process. If there is any error, the system shows an error message.
+
+Our project also has an AI vision feature. The user can upload a crop image or take a photo using the camera. The uploaded image is passed to identify_crop_ai() in services/local_vision_service.py.
+
+This function sends the image to Groq AI through groq_service.py. Groq checks the image and tries to identify the crop using the Llama 4 Vision model. If the crop is recognized, the system displays the crop name, confidence, and notes.
+
+Simple explanation:
+The weather service gives live temperature and humidity. The AI vision service helps identify crops from images. These features make the project more advanced and practical.
+
+Speaking line:
+"My part explains the external services. The weather.py file fetches live temperature and humidity using OpenWeatherMap API. The AI vision service uses Groq Cloud AI and Llama 4 Vision to identify crops from uploaded images or camera input."
+
+
+============================================================
+MEMBER 4: FERTILIZER, MARKET, PDF REPORT, DATABASE, AND TESTING
+============================================================
+
+My part is to explain fertilizer recommendation, market forecast, PDF report, database, and testing.
+
+After the crop is predicted, our system gives extra useful information to the farmer.
+
+Important files in my part:
+
+logic/fertilizer.py:
+This file calculates fertilizer requirements.
+
+logic/market.py:
+This file calculates market revenue, input cost, net profit, and ROI.
+
+logic/pdf_generator.py:
+This file creates a downloadable PDF report.
+
+utils/database.py:
+This file stores and retrieves prediction history using SQLite database.
+
+tests/test_logic.py:
+This file contains tests for checking project logic.
+
+Fertilizer Explanation:
+The calculate_fertilizer_prescription() function is written in logic/fertilizer.py.
+
+It compares the actual soil N, P, K values with the required N, P, K values for the recommended crop.
+
+If the soil has less nutrients than required, the system calculates the deficit.
+
+Then it calculates:
+
+1. Urea for Nitrogen
+2. DAP for Phosphorus and some Nitrogen
+3. MOP for Potassium
+
+This helps the farmer know how much fertilizer is needed per hectare.
+
+Market Explanation:
+The get_market_forecast() function is written in logic/market.py.
+
+It uses crop market data from config/crop_data.json and calculates:
+
+1. Price per quintal
+2. Yield per hectare
+3. Input cost
+4. Total revenue
+5. Net profit
+6. ROI percentage
+
+Formula:
+Revenue = Price per quintal x Yield per hectare
+Net Profit = Revenue - Input Cost
+ROI = Net Profit / Input Cost x 100
+
+PDF Report Explanation:
+The PDF report is generated using logic/pdf_generator.py. It contains the recommendation result, soil values, weather data, fertilizer advice, and market forecast. The farmer can download this report for future use.
+
+Database Explanation:
+The database logic is written in utils/database.py. The project uses SQLite database. The database stores prediction history such as district, crop name, confidence, temperature, humidity, pH, rainfall, NPK values, and language.
+
+The main database functions are:
+
+init_db():
+Creates the reports table if it does not exist.
+
+save_report():
+Saves a new recommendation report.
+
+get_all_reports():
+Fetches previous reports.
+
+get_regional_analytics():
+Shows analytics like top crops and district-wise usage.
+
+Testing Explanation:
+The tests folder contains test files. These tests help check whether the calculation logic is working properly. For example, tests can check fertilizer calculation and other logic functions.
+
+Speaking line:
+"My part explains the final output features. After crop prediction, the system calculates fertilizer requirements, market profit, generates a PDF report, and saves the prediction history in SQLite database."
+
+
+============================================================
+COMPLETE PROJECT WORKFLOW
+============================================================
+
+The complete workflow of our project is:
+
+1. User opens the Streamlit application.
+2. User selects language, district, soil type, and season.
+3. User enters N, P, K, and pH values.
+4. The app fetches live temperature and humidity using weather.py.
+5. The model loads crop_model.pkl and label_encoder.pkl.
+6. The machine learning model predicts the most suitable crop.
+7. The app shows crop name, confidence percentage, and runner-up crops.
+8. If the user uploads an image, Groq AI identifies the crop.
+9. The fertilizer module calculates Urea, DAP, and MOP requirements.
+10. The market module calculates revenue, net profit, and ROI.
+11. The PDF module generates a downloadable report.
+12. The database module saves the report in SQLite history.
+
+
+============================================================
+SHORT CODE FLOW
+============================================================
+
+app.py is the main controller.
+
+It imports:
+
+1. get_live_weather from weather.py
+2. calculate_fertilizer_prescription from logic/fertilizer.py
+3. get_market_forecast from logic/market.py
+4. create_pdf_report from logic/pdf_generator.py
+5. identify_crop_ai from services/local_vision_service.py
+6. database functions from utils/database.py
+
+This means app.py connects all parts of the project together.
+
+Simple flow:
+
+Input -> Weather -> ML Prediction -> Fertilizer -> Market -> PDF -> Database
+
+
+============================================================
+FINAL CONCLUSION
+============================================================
+
+Our Crop Recommendation System is useful for farmers because it gives crop suggestions based on scientific soil and weather data. It also provides fertilizer advice, market profit estimation, crop image identification, PDF report, and prediction history.
+
+This project combines Machine Learning, API integration, AI vision, database, and Streamlit web development in one application.
+
+Final group speaking line:
+"In conclusion, our project helps farmers make better crop decisions using machine learning, live weather, AI image recognition, fertilizer calculation, and market forecasting. Thank you."
+
+
+============================================================
+QUICK VIVA QUESTIONS AND ANSWERS
+============================================================
+
+Question 1: What is the main purpose of this project?
+Answer: The main purpose is to recommend the most suitable crop based on soil nutrients, pH, weather, rainfall, and location.
+
+Question 2: Which framework is used for the frontend?
+Answer: Streamlit is used for the frontend.
+
+Question 3: Which file is the main file?
+Answer: app.py is the main file.
+
+Question 4: Which machine learning file is used for prediction?
+Answer: model/crop_model.pkl is used for prediction.
+
+Question 5: What are the input features for the ML model?
+Answer: Nitrogen, Phosphorus, Potassium, temperature, humidity, pH, and rainfall.
+
+Question 6: Why do we use weather.py?
+Answer: weather.py fetches live temperature and humidity from OpenWeatherMap API.
+
+Question 7: What is the use of fertilizer.py?
+Answer: fertilizer.py calculates how much Urea, DAP, and MOP fertilizer is needed.
+
+Question 8: What is the use of market.py?
+Answer: market.py estimates revenue, input cost, net profit, and ROI.
+
+Question 9: What is the use of database.py?
+Answer: database.py stores and retrieves prediction history using SQLite.
+
+Question 10: What is the use of Groq AI in this project?
+Answer: Groq AI (Llama 4 Vision) is used to identify crops from uploaded images or camera input, replacing Gemini for better speed and higher rate limits.
