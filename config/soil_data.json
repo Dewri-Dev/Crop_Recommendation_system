@@ -1,0 +1,50 @@
+[
+    {
+        "id": "alluvial",
+        "title_key": "Loamy / Alluvial",
+        "desc_key": "soil_alluvial_desc",
+        "image": "Soil/alluvial-soil-172eba69a5-800x535.webp"
+    },
+    {
+        "id": "clay",
+        "title_key": "Clay",
+        "desc_key": "soil_clay_desc",
+        "image": "Soil/Clay .jpeg"
+    },
+    {
+        "id": "laterite",
+        "title_key": "Red Laterite",
+        "desc_key": "soil_laterite_desc",
+        "image": "Soil/red Laterite Soil.webp"
+    },
+    {
+        "id": "tea",
+        "title_key": "Tea Garden Soil",
+        "desc_key": "soil_tea_desc",
+        "image": "Soil/Tea Garden.jpg"
+    },
+    {
+        "id": "hill",
+        "title_key": "Hill / Forest Loam",
+        "desc_key": "soil_hill_desc",
+        "image": "Soil/Hill.jpeg"
+    },
+    {
+        "id": "peaty",
+        "title_key": "Peaty / Waterlogged",
+        "desc_key": "soil_peaty_desc",
+        "image": "Soil/Peaty.jpeg"
+    },
+    {
+        "id": "sandy",
+        "title_key": "Sandy / Riverbank",
+        "desc_key": "soil_sandy_desc",
+        "image": "Soil/Sandy or Riverbank.jpeg"
+    },
+    {
+        "id": "sandy_loam",
+        "title_key": "Sandy Loam",
+        "desc_key": "soil_sandy_loam_desc",
+        "image": "Soil/Sandy loamy.jpeg"
+    }
+]

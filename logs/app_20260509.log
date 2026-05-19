@@ -55,3 +55,69 @@
 2026-05-09 16:48:41 - assam_crop_advisor - INFO - Database initialized successfully.
 2026-05-09 16:48:41 - assam_crop_advisor - WARNING - AI saw 'Butternut Squash' but no system mapping found. Defaulting to rice.
 2026-05-09 16:48:55 - assam_crop_advisor - INFO - Database initialized successfully.
+2026-05-09 18:57:56 - assam_crop_advisor - INFO - Database initialized successfully.
+2026-05-09 18:58:48 - assam_crop_advisor - INFO - Database initialized successfully.
+2026-05-09 18:58:48 - assam_crop_advisor - INFO - Database initialized successfully.
+2026-05-09 18:58:50 - assam_crop_advisor - WARNING - WEATHER_API_KEY not found in .env, using fallback key.
+2026-05-09 18:58:50 - assam_crop_advisor - INFO - Weather fetched for Guwahati: 28.95°C, 74% humidity
+2026-05-09 18:58:50 - assam_crop_advisor - INFO - Prediction generated for Guwahati: ou_tenga (33.0%)
+2026-05-09 18:58:50 - assam_crop_advisor - INFO - Local image not found for ou_tenga, fetching from Wikipedia...
+2026-05-09 18:58:52 - assam_crop_advisor - INFO - No image found for ou_tenga, using placeholder.
+2026-05-09 18:59:00 - assam_crop_advisor - INFO - Database initialized successfully.
+2026-05-09 18:59:01 - assam_crop_advisor - INFO - Database initialized successfully.
+2026-05-09 18:59:01 - assam_crop_advisor - WARNING - WEATHER_API_KEY not found in .env, using fallback key.
+2026-05-09 18:59:02 - assam_crop_advisor - INFO - Weather fetched for Guwahati: 28.95°C, 74% humidity
+2026-05-09 18:59:02 - assam_crop_advisor - INFO - Prediction generated for Guwahati: local_brinjal (42.0%)
+2026-05-09 18:59:06 - assam_crop_advisor - INFO - Database initialized successfully.
+2026-05-09 18:59:09 - assam_crop_advisor - INFO - Database initialized successfully.
+2026-05-09 18:59:09 - assam_crop_advisor - WARNING - WEATHER_API_KEY not found in .env, using fallback key.
+2026-05-09 18:59:09 - assam_crop_advisor - INFO - Weather fetched for Guwahati: 28.95°C, 74% humidity
+2026-05-09 18:59:09 - assam_crop_advisor - INFO - Prediction generated for Guwahati: kaji_nemu (31.0%)
+2026-05-09 18:59:09 - assam_crop_advisor - INFO - Local image not found for kaji_nemu, fetching from Wikipedia...
+2026-05-09 18:59:11 - assam_crop_advisor - INFO - Found Wikipedia infobox image for kaji_nemu
+2026-05-09 18:59:17 - assam_crop_advisor - INFO - Database initialized successfully.
+2026-05-09 18:59:20 - assam_crop_advisor - INFO - Database initialized successfully.
+2026-05-09 18:59:20 - assam_crop_advisor - WARNING - WEATHER_API_KEY not found in .env, using fallback key.
+2026-05-09 18:59:20 - assam_crop_advisor - INFO - Weather fetched for Guwahati: 28.95°C, 74% humidity
+2026-05-09 18:59:20 - assam_crop_advisor - INFO - Prediction generated for Guwahati: ou_tenga (23.0%)
+2026-05-09 18:59:20 - assam_crop_advisor - INFO - Local image not found for ou_tenga, fetching from Wikipedia...
+2026-05-09 18:59:21 - assam_crop_advisor - INFO - No image found for ou_tenga, using placeholder.
+2026-05-09 18:59:24 - assam_crop_advisor - INFO - Database initialized successfully.
+2026-05-09 18:59:25 - assam_crop_advisor - INFO - Database initialized successfully.
+2026-05-09 18:59:25 - assam_crop_advisor - WARNING - WEATHER_API_KEY not found in .env, using fallback key.
+2026-05-09 18:59:25 - assam_crop_advisor - INFO - Weather fetched for Guwahati: 28.95°C, 74% humidity
+2026-05-09 18:59:25 - assam_crop_advisor - INFO - Prediction generated for Guwahati: kaji_nemu (42.0%)
+2026-05-09 18:59:25 - assam_crop_advisor - INFO - Local image not found for kaji_nemu, fetching from Wikipedia...
+2026-05-09 18:59:27 - assam_crop_advisor - INFO - Found Wikipedia infobox image for kaji_nemu
+2026-05-09 18:59:32 - assam_crop_advisor - INFO - Database initialized successfully.
+2026-05-09 18:59:33 - assam_crop_advisor - INFO - Database initialized successfully.
+2026-05-09 18:59:33 - assam_crop_advisor - WARNING - WEATHER_API_KEY not found in .env, using fallback key.
+2026-05-09 18:59:33 - assam_crop_advisor - INFO - Weather fetched for Guwahati: 28.95°C, 74% humidity
+2026-05-09 18:59:33 - assam_crop_advisor - INFO - Prediction generated for Guwahati: amlokhi (15.0%)
+2026-05-09 18:59:38 - assam_crop_advisor - INFO - Database initialized successfully.
+2026-05-09 18:59:39 - assam_crop_advisor - INFO - Database initialized successfully.
+2026-05-09 18:59:40 - assam_crop_advisor - WARNING - WEATHER_API_KEY not found in .env, using fallback key.
+2026-05-09 18:59:40 - assam_crop_advisor - INFO - Weather fetched for Guwahati: 28.95°C, 74% humidity
+2026-05-09 18:59:40 - assam_crop_advisor - INFO - Prediction generated for Guwahati: amlokhi (24.0%)
+2026-05-09 18:59:43 - assam_crop_advisor - INFO - Database initialized successfully.
+2026-05-09 18:59:43 - assam_crop_advisor - INFO - Database initialized successfully.
+2026-05-09 18:59:43 - assam_crop_advisor - WARNING - WEATHER_API_KEY not found in .env, using fallback key.
+2026-05-09 18:59:43 - assam_crop_advisor - INFO - Weather fetched for Guwahati: 28.95°C, 74% humidity
+2026-05-09 18:59:43 - assam_crop_advisor - INFO - Prediction generated for Guwahati: local_brinjal (42.0%)
+2026-05-09 18:59:47 - assam_crop_advisor - INFO - Database initialized successfully.
+2026-05-09 18:59:48 - assam_crop_advisor - INFO - Database initialized successfully.
+2026-05-09 18:59:48 - assam_crop_advisor - WARNING - WEATHER_API_KEY not found in .env, using fallback key.
+2026-05-09 18:59:49 - assam_crop_advisor - INFO - Weather fetched for Guwahati: 28.95°C, 74% humidity
+2026-05-09 18:59:49 - assam_crop_advisor - INFO - Prediction generated for Guwahati: ou_tenga (33.0%)
+2026-05-09 18:59:49 - assam_crop_advisor - INFO - Local image not found for ou_tenga, fetching from Wikipedia...
+2026-05-09 18:59:50 - assam_crop_advisor - INFO - No image found for ou_tenga, using placeholder.
+2026-05-09 19:06:57 - assam_crop_advisor - INFO - Database initialized successfully.
+2026-05-09 19:07:01 - assam_crop_advisor - INFO - Database initialized successfully.
+2026-05-09 19:07:02 - assam_crop_advisor - INFO - Database initialized successfully.
+2026-05-09 19:07:04 - assam_crop_advisor - WARNING - WEATHER_API_KEY not found in .env, using fallback key.
+2026-05-09 19:07:04 - assam_crop_advisor - INFO - Weather fetched for Guwahati: 28.95°C, 74% humidity
+2026-05-09 19:07:04 - assam_crop_advisor - INFO - Prediction generated for Guwahati: ou_tenga (33.0%)
+2026-05-09 19:07:43 - assam_crop_advisor - INFO - Database initialized successfully.
+2026-05-09 19:07:48 - assam_crop_advisor - INFO - Database initialized successfully.
+2026-05-09 19:07:50 - assam_crop_advisor - INFO - Database initialized successfully.
+2026-05-09 19:07:55 - assam_crop_advisor - INFO - Database initialized successfully.

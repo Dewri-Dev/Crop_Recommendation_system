@@ -36,9 +36,11 @@ def load_config_data():
         translations = json.load(f)
     with open("config/crop_data.json", "r", encoding="utf-8") as f:
         crop_data = json.load(f)
-    return translations, crop_data
+    with open("config/soil_data.json", "r", encoding="utf-8") as f:
+        soil_data = json.load(f)
+    return translations, crop_data, soil_data
 
-UI_TEXT, CROP_DATA = load_config_data()
+UI_TEXT, CROP_DATA, SOIL_DATA = load_config_data()
 
 def T(key):
     lang = st.session_state.get("lang","en")
@@ -581,21 +583,19 @@ with tab_guide:
     st.divider()
     st.markdown(f"## {T('soil_tutorial_title')}")
     
-    s1, s2 = st.columns(2)
-    with s1:
-        with st.container(border=True):
-            st.markdown(f"**🌾 {T('Loamy / Alluvial')}**")
-            st.write(T('soil_alluvial_desc'))
-        with st.container(border=True):
-            st.markdown(f"**⛰️ {T('Red Laterite')}**")
-            st.write(T('soil_laterite_desc'))
-    with s2:
-        with st.container(border=True):
-            st.markdown(f"**💧 {T('Clay')}**")
-            st.write(T('soil_clay_desc'))
-        with st.container(border=True):
-            st.markdown(f"**🍵 {T('Tea Garden Soil')}**")
-            st.write(T('soil_tea_desc'))
+    # Display soils in a grid
+    cols_per_row = 2
+    for i in range(0, len(SOIL_DATA), cols_per_row):
+        cols = st.columns(cols_per_row)
+        for j in range(cols_per_row):
+            if i + j < len(SOIL_DATA):
+                soil = SOIL_DATA[i + j]
+                with cols[j]:
+                    with st.container(border=True):
+                        st.markdown(f"#### {T(soil['title_key'])}")
+                        if os.path.exists(soil['image']):
+                            st.image(soil['image'], use_container_width=True)
+                        st.write(T(soil['desc_key']))
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # RESULTS
