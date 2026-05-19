@@ -1,13 +1,10 @@
-streamlit
-pandas
-numpy
-scikit-learn
+# Streamlit removed
 requests
-plotly
-fpdf2
-pillow
+scikit-learn
+numpy
 python-dotenv
-tenacity
-urllib3
-torch
-timm
+pandas
+matplotlib
+seaborn
+groq
+gradio

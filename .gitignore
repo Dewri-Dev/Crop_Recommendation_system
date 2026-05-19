@@ -1,32 +1,16 @@
-# Python Virtual Environments
+# Environments
+.env
 myenv/
-venv/
-ENV/
 env/
-
-# Python Caches
+venv/
 __pycache__/
 *.pyc
-*.pyo
-*.pyd
 
-# Environment Variables & Secrets
-.env
-.streamlit/secrets.toml
+# Gradio specific
+.gradio/
 
-# Logs & Persistent Data
-logs/
-data/*.db
-
-# IDE & OS Specific
+# IDEs
 .vscode/
-.devcontainer/
 .idea/
-.DS_Store
-Thumbs.db
 
-# Jupyter Notebook Checkpoints
-.ipynb_checkpoints/
-
-# Project Memory
-GEMINI.md
+# Models (keeping them for now as they are trained)
