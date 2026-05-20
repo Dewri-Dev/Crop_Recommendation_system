@@ -1,0 +1,82 @@
+{
+  "rice": {
+    "local_name": "Sali Dhan (শালি ধান)",
+    "recovery": "If your Sali rice is submerged, use 'Swarna Sub-1' or 'Ranjit Sub-1' varieties which can survive 14 days underwater. If the flood recedes late (Sept), switch to 'Gitesh' or 'Prafulla'."
+  },
+  "joha_rice": {
+    "local_name": "Joha Dhan (জোহা ধান)",
+    "recovery": "Joha is sensitive to deep water. If lost, prepare for short-duration Rabi pulses like Lentil or Toria to recover economic losses."
+  },
+  "bora_rice": {
+    "local_name": "Bora Dhan (বৰা ধান)",
+    "recovery": "Post-flood, ensure soil is treated with lime (চুণ) before replanting Bora rice to maintain proper pH levels after water recedes."
+  },
+  "assam_tea": {
+    "local_name": "Chah (চাহ)",
+    "recovery": "Tea bushes cannot stand waterlogging. Dig deep drainage trenches immediately. Apply 'Potash' after water recedes to boost plant immunity."
+  },
+  "jute": {
+    "local_name": "Mora-Pat (মৰাপাত)",
+    "recovery": "If jute is lost, wait for the silt to settle and plant 'Toria' (Mustard) as a follow-up crop in the early winter season."
+  },
+  "areca_nut": {
+    "local_name": "Tamul (তামোল)",
+    "recovery": "Apply 'Bordeaux Mixture' to the base to prevent 'Bud Rot' (পঁচা ৰোগ) which is common after floods in Assam."
+  },
+  "banana": {
+    "local_name": "Kol (কল)",
+    "recovery": "Bananas are highly susceptible to root rot post-flood. Apply 'Trichoderma' to the soil and ensure no water remains stagnant around the base."
+  },
+  "papaya": {
+    "local_name": "Amita (অমিতা)",
+    "recovery": "Papaya dies quickly in standing water. If lost, replant on raised beds (ভেটি) to prevent future waterlogging issues."
+  },
+  "kaji_nemu": {
+    "local_name": "Kaji Nemu (কাজী নেমু)",
+    "recovery": "Prune dead branches after floods. Apply organic manure and 'Neem Cake' to rejuvenate the roots after the soil dries."
+  },
+  "bhut_jolokia": {
+    "local_name": "Bhut Jolokia (ভোট জলকীয়া)",
+    "recovery": "Extremely sensitive to moisture. If the crop survives, apply fungicide immediately to prevent 'Die-back' disease caused by humidity."
+  },
+  "blackgram": {
+    "local_name": "Mati Mah (মাটি মাহ)",
+    "recovery": "Perfect for post-flood sowing (late Aug/Sept). It utilizes residual moisture and fixes nitrogen back into the silted soil."
+  },
+  "lentil": {
+    "local_name": "Masur Mah (মচুৰ মাহ)",
+    "recovery": "A great recovery crop for the Rabi season. Sow in October/November if the Kharif crop was lost to floods."
+  },
+  "lai_xaak": {
+    "local_name": "Lai Xaak (লাই শাক)",
+    "recovery": "Winter recovery crop. Can be grown quickly in home gardens to ensure food security after major crop loss."
+  },
+  "dhekia_xaak": {
+    "local_name": "Dhekia (ঢেকীয়া)",
+    "recovery": "Naturally flood-tolerant fern. Can be harvested from the wild or moist edges after floods for immediate consumption/sale."
+  },
+  "maize": {
+    "local_name": "Makai (মাকৈ)",
+    "recovery": "If maize is waterlogged, it will yellow and die. Switch to 'Green Gram' which grows faster in the drying silt."
+  },
+  "mango": {
+    "local_name": "Aam (আম)",
+    "recovery": "Deep-rooted trees usually survive, but silt buildup can suffocate roots. Clear the silt from around the trunk base (গুৰি) after the water recedes."
+  },
+  "local_brinjal": {
+    "local_name": "Bengena (বেঙেনা)",
+    "recovery": "Replant as a late Rabi crop. Ensure the soil is treated with wood ash (খৰিৰ ছাঁই) to prevent bacterial wilt after floods."
+  },
+  "local_pumpkin": {
+    "local_name": "Rangalao (ৰঙালাও)",
+    "recovery": "Can be sown in late September. The vine covers the ground quickly, preventing soil erosion caused by receding waters."
+  },
+  "manimuni": {
+    "local_name": "Manimuni (মানিমুনি)",
+    "recovery": "Naturallly grows in moist soil. Can be harvested and used as a medicinal recovery food for farmers during the post-flood period."
+  },
+  "bamboo_shoot": {
+    "local_name": "Bah-Gaj (বাঁহৰ গাজ)",
+    "recovery": "Bamboo groves act as natural barriers. Clear the debris from the grove to allow new shoots to emerge in the next season."
+  }
+}

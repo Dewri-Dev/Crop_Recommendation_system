@@ -4,39 +4,37 @@ from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.preprocessing import LabelEncoder
 
-# 1. LOAD THE DATASET
-# This CSV contains rows of soil data (N,P,K,pH) and weather (Temp, Humidity, Rain)
+
+# [SYLLABUS MODULE 2]: DATA COLLECTION & DATA PRE-PROCESSING
+# This section implements data loading and preparation techniques.
 print("Loading dataset...")
 df = pd.read_csv("data/Crop_recommendation.csv")
 
-# 2. SEPARATE FEATURES AND TARGET
-# X = Input variables (N, P, K, temperature, humidity, ph, rainfall)
-# y = Output variable (label / crop name)
+# Feature Selection
 X = df[['N', 'P', 'K', 'temperature', 'humidity', 'ph', 'rainfall']]
 y = df['label']
 
-# 3. ENCODE THE CROP NAMES
-# Computers understand numbers better than text. 
-# LabelEncoder converts 'rice' to 0, 'maize' to 1, etc.
+# [SYLLABUS MODULE 2]: DATA TRANSFORMATION (LABEL ENCODING)
+# Converting categorical text labels into numerical format for the ML model.
 le = LabelEncoder()
 y_encoded = le.fit_transform(y)
 
-# 4. SPLIT DATA FOR TESTING
-# We use 80% of data for training and 20% to test if the AI learned correctly.
+# [SYLLABUS MODULE 4]: STATISTICAL FOUNDATIONS (DATA SPLITTING)
+# Implementing the Train-Test Split (80/20) for model validation.
 X_train, X_test, y_train, y_test = train_test_split(X, y_encoded, test_size=0.2, random_state=42)
 
-# 5. TRAIN THE MODEL (THE "BRAIN")
-# Random Forest is like a group of decision trees voting on the best crop.
+# [SYLLABUS MODULE 5]: INTRODUCTION TO MACHINE LEARNING (MODEL TRAINING)
+# Selecting and training the Random Forest Classifier algorithm.
 print("Training the Random Forest model...")
 model = RandomForestClassifier(n_estimators=100, random_state=42)
 model.fit(X_train, y_train)
 
-# 6. EVALUATE
+# [SYLLABUS MODULE 5]: MODEL EVALUATION
+# Calculating accuracy to measure performance.
 accuracy = model.score(X_test, y_test)
 print(f"Model Training Complete! Accuracy: {accuracy * 100:.2f}%")
 
-# 7. SAVE THE BRAIN TO DISK
-# We save these files so our app.py can use them later without re-training.
+# [MODEL SERIALIZATION]
 pickle.dump(model, open("model/crop_model.pkl", "wb"))
 pickle.dump(le, open("model/label_encoder.pkl", "wb"))
 
