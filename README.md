@@ -70,12 +70,4 @@ GROQ_API_KEY=your_groq_api_key
 python app.py
 ```
 
----
-
-## 🏆 Unique Selling Points for Viva
-1.  **Defeats Data Drift**: Unlike static models, this system is contextually aware of the current hour's weather.
-2.  **High Cardinality**: Categorizes 49 classes instead of the standard 22, proving regional dataset augmentation.
-3.  **Prescriptive Analytics**: Moves beyond "What to plant" to "How to plant" using Generative AI.
-
----
 *Developed for the Micro Project component at Assam Science and Technology University (ASTU), 2026.*
