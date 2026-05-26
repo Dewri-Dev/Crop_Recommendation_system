@@ -59,8 +59,18 @@ def get_analytics_plots():
     return fig1, fig2, fig3, fig4
 
 # --- 3. CORE LOGIC ---
+DISTRICT_MAP = {
+    "Kamrup Metropolitan": "Guwahati",
+    "Dibrugarh": "Dibrugarh",
+    "Cachar": "Silchar",
+    "Jorhat": "Jorhat",
+    "Sonitpur": "Tezpur",
+    "Nagaon": "Nagaon"
+}
+
 def advisor(n, p, k, ph, rain, district, soil, flood):
-    temp, hum, _ = get_live_weather(district)
+    city = DISTRICT_MAP.get(district, district)
+    temp, hum, _ = get_live_weather(city)
     if not temp: return "Error fetching weather data."
 
     features = np.array([[n, p, k, temp, hum, ph, rain]])
@@ -119,7 +129,7 @@ with gr.Blocks(title="Assam Crop Advisor", theme=gr.themes.Soft()) as demo:
                         ph = gr.Slider(0, 14, label="Soil pH", value=6.5)
                         rain = gr.Number(label="Expected Rainfall (mm)", value=200)
                     with gr.Row():
-                        district = gr.Dropdown(["Guwahati", "Dibrugarh", "Silchar", "Jorhat", "Tezpur", "Nagaon"], label="District", value="Guwahati")
+                        district = gr.Dropdown(["Kamrup Metropolitan", "Dibrugarh", "Cachar", "Jorhat", "Sonitpur", "Nagaon"], label="District", value="Kamrup Metropolitan")
                         soil = gr.Dropdown(["Alluvial", "Clayey", "Sandy Loam"], label="Soil Type", value="Alluvial")
                     flood = gr.Checkbox(label="Flood Affected Area?")
                     btn = gr.Button("Get Advisor Results", variant="primary")
