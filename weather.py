@@ -32,3 +32,6 @@ def get_live_weather(city_name):
             
     except Exception as e:
         return None, None, f"Connection Failed: {e}"
+
+
+

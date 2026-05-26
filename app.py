@@ -28,7 +28,7 @@ def get_ai_advice(crop, n, p, k, temp):
     try:
         client = Groq(api_key=os.getenv("GROQ_API_KEY"))
         prompt = f"1 short farming tip for {crop} in Assam (Soil N:{n}, P:{p}, K:{k}, Temp:{temp}C)."
-        res = client.chat.completions.create(model="llama-3.3-70b-versatile", messages=[{"role": "user", "content": prompt}], max_tokens=80)
+        res = client.chat.completions.create(model="llama-3.3-70b-versatile", messages=[{"role": "user", "content": prompt}], max_tokens=1000)
         return res.choices[0].message.content
     except: return "No AI tip available. Follow standard practices."
 
@@ -82,9 +82,9 @@ def advisor(n, p, k, ph, rain, district, soil, flood):
     recovery_tip = crop_info.get("recovery", "Follow standard practices.")
     
     advice = get_ai_advice(primary_crop, n, p, k, temp)
-    flood_msg = f"\n\n🚨 **FLOOD RECOVERY:** {recovery_tip}" if flood else ""
+    flood_msg = f"\n\n🚨 FLOOD RECOVERY: {recovery_tip}" if flood else ""
 
-    top_list = "### 🔝 Top 5 Recommendations:\n"
+    top_list = "Top Crop Recommendations:\n"
     for i, (c, prob) in enumerate(zip(top_5_crops, top_5_probs)):
         l_name = CROP_DATA.get(c.lower(), {}).get("local_name", c.upper())
         top_list += f"{i+1}. **{l_name}** ({prob*100:.1f}%)\n"
@@ -93,7 +93,7 @@ def advisor(n, p, k, ph, rain, district, soil, flood):
     {top_list}
     
     ---
-    🌟 **PRIMARY CHOICE: {local_name}**
+    🌟 PRIMARY CHOICE: {local_name}
     
     Location Snapshot ({district}):
     - 🌡️ Temp: {temp}°C | 💧 Humidity: {hum}% | 🧪 Soil: {soil}
@@ -105,7 +105,7 @@ def advisor(n, p, k, ph, rain, district, soil, flood):
 
 # --- 4. UI CONSTRUCTION ---
 with gr.Blocks(title="Assam Crop Advisor", theme=gr.themes.Soft()) as demo:
-    gr.Markdown("# 🚜 Assam Crop Advisor & Analytics")
+    gr.Markdown("🚜 Assam Crop Advisor & Analytics")
     
     with gr.Tabs():
         with gr.TabItem("🌱 Crop Advisor"):
@@ -144,4 +144,4 @@ with gr.Blocks(title="Assam Crop Advisor", theme=gr.themes.Soft()) as demo:
     )
 
 if __name__ == "__main__":
-    demo.launch()
+    demo.launch(share=True)

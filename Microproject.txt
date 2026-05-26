@@ -1,0 +1,1893 @@
+\documentclass[12pt,a4paper]{report}
+
+% == Packages ==================================================================
+\usepackage[a4paper, top=1in, bottom=1in, left=1in, right=1in, headheight=14.5pt]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{mathptmx}
+\usepackage{setspace}
+\usepackage{titlesec}
+\usepackage{tocloft}
+\usepackage{graphicx}
+\usepackage{fancyhdr}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{tabularx}
+\usepackage{longtable}
+\usepackage{ragged2e}
+\usepackage{parskip}
+\usepackage{xcolor}
+\usepackage{microtype}
+\usepackage{float}
+\usepackage{enumitem}
+\usepackage{indentfirst}
+\usepackage{multirow}
+\usepackage{pifont}
+\usepackage{etoolbox}
+\usepackage{caption}
+\usepackage{tocbibind}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{textcomp} % Added for \textdegree
+\usepackage[hyphens]{url}
+\urlstyle{tt}
+
+\usepackage{listings}
+\definecolor{codegreen}{rgb}{0,0.6,0}
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\definecolor{backcolour}{rgb}{0.95,0.95,0.92}
+
+\lstdefinestyle{mystyle}{
+    backgroundcolor=\color{backcolour},   
+    commentstyle=\color{codegreen},
+    keywordstyle=\color{magenta},
+    numberstyle=\tiny\color{codegray},
+    stringstyle=\color{codepurple},
+    basicstyle=\ttfamily\footnotesize,
+    breakatwhitespace=false,         
+    breaklines=true,                 
+    captionpos=b,                    
+    keepspaces=true,                 
+    numbers=left,                    
+    numbersep=5pt,                  
+    showspaces=false,                
+    showstringspaces=false,
+    showtabs=false,                  
+    tabsize=2
+}
+\lstset{style=mystyle}
+
+% hyperref should generally be loaded last
+\usepackage[hyphens]{hyperref}
+
+% == All text black ============================================================
+\color{black}
+\renewcommand{\rmdefault}{ptm}
+\renewcommand{\sfdefault}{ptm}
+\renewcommand{\ttdefault}{pcr}
+
+\hypersetup{
+  colorlinks=true, linkcolor=black, urlcolor=black, citecolor=black,
+  pdftitle={AI-Based Crop Recommendation System for Assam},
+  pdfauthor={The Alchemists},
+  bookmarksnumbered=true,
+}
+
+\onehalfspacing
+\setlength{\parindent}{0.5in}
+\setlength{\parskip}{6pt}
+
+% == Heading Styles ============================================================
+\titleformat{\chapter}[block]
+  {\fontsize{16}{19.2}\selectfont\bfseries\centering}
+  {\chaptername\ \thechapter:\ }{0pt}{}
+\titlespacing*{\chapter}{0pt}{0pt}{18pt}
+
+\titleformat{\section}
+  {\fontsize{14}{16.8}\selectfont\bfseries}{\thesection\ }{0pt}{}
+\titlespacing*{\section}{0pt}{14pt}{6pt}
+
+\titleformat{\subsection}
+  {\fontsize{12}{14.4}\selectfont\bfseries}{\thesubsection\ }{0pt}{}
+\titlespacing*{\subsection}{0pt}{10pt}{4pt}
+
+\titleformat{\subsubsection}
+  {\fontsize{12}{14.4}\selectfont\itshape}{\thesubsubsection\ }{0pt}{}
+\titlespacing*{\subsubsection}{0pt}{8pt}{3pt}
+
+% == TOC =======================================================================
+\renewcommand{\cfttoctitlefont}{\fontsize{16}{19.2}\selectfont\bfseries}
+\renewcommand{\cftchapfont}{\fontsize{12}{14.4}\selectfont\bfseries}
+\renewcommand{\cftsecfont}{\fontsize{12}{14.4}\selectfont}
+\renewcommand{\cftsubsecfont}{\fontsize{12}{14.4}\selectfont}
+\renewcommand{\cftchapleader}{\cftdotfill{\cftdotsep}}
+\setlength{\cftbeforechapskip}{6pt}
+\setlength{\cftbeforesecskip}{2pt}
+
+% == Page style ================================================================
+\pagestyle{fancy}\fancyhf{}
+\fancyhead[L]{\small\fontsize{10}{12}\selectfont AI-Based Crop Recommendation System}
+\fancyhead[R]{\small\fontsize{10}{12}\selectfont Micro Project Report}
+\fancyfoot[C]{\small\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+\fancypagestyle{plain}{\fancyhf{}\fancyfoot[C]{\small\thepage}\renewcommand{\headrulewidth}{0pt}}
+
+\newcommand{\HRule}{\noindent\rule{\textwidth}{0.5pt}}
+\newcommand{\sigline}[1]{\vspace{24pt}\noindent\rule{7cm}{0.4pt}\\{\fontsize{12}{14.4}\selectfont #1}}
+
+\pagenumbering{roman}
+
+% ==============================================================================
+\begin{document}
+% ==============================================================================
+
+% ==============================================================================
+%  1. COVER PAGE
+% ==============================================================================
+\begin{titlepage}
+\centering
+\fontsize{12}{14.4}\selectfont
+
+\includegraphics[width=3.5cm]{Assam_Science_and_Technology_University_logo.png}\\[10pt]
+
+\fontsize{14}{16.8}\selectfont\bfseries
+Assam Science and Technology University\\[4pt]
+\fontsize{12}{14.4}\selectfont\mdseries
+Department of Computer Science \& Engineering\\
+Guwahati, Assam, India
+
+\vspace{20pt}
+\vspace{12pt}
+
+{\fontsize{16}{19.2}\selectfont\bfseries
+AI-Based Crop Recommendation System\\[6pt]
+for Assam using Real-Time Weather Data}
+
+\vspace{16pt}
+
+{\fontsize{16}{19.2}\selectfont\bfseries
+Microproject \\[4pt]
+}
+
+\vspace{20pt}
+
+{\fontsize{14}{16.8}\selectfont\bfseries Submitted by:}\\[8pt]
+
+\fontsize{12}{14.4}\selectfont
+\begin{center}
+\begin{tabular}{|l|l|l|}
+\hline
+\textbf{Name} & \textbf{Enrollment Number} & \textbf{Branch} \\
+\hline
+Anoushka Goswami & 2481106018 & B.Tech CSE(Data Science)\\
+\hline
+Jessica Sonowal & 2481106019 & B.Tech CSE(Data Science)\\
+\hline
+Nayan Nirban Dewri & 2481108007 & B.Tech CSE(Data Science)\\
+\hline
+Nibir Niloy Kalita & 2481108008 & B.Tech CSE(Data Science)\\
+\hline
+\end{tabular}
+\end{center}
+
+\vspace{20pt}
+
+{\fontsize{14}{16.8}\selectfont\bfseries Under the Guidance of:}\\[6pt]
+\fontsize{12}{14.4}\selectfont
+Miss Sanjukta Sarma, Assistant Professor\\
+Department of Computer Science \& Engineering
+
+\vspace{18pt}
+
+\vspace{10pt}
+
+{\fontsize{12}{14.4}\selectfont\bfseries
+Academic Year: 2026}
+
+\vspace{10pt}
+
+\vspace{4pt}
+\fontsize{11}{13.2}\selectfont
+\textit{Submitted to the Assam Science and Technology University (ASTU)}
+
+\end{titlepage}
+\clearpage
+
+% ==============================================================================
+%  2. DECLARATION
+% ==============================================================================
+\chapter*{Declaration}
+\addcontentsline{toc}{chapter}{Declaration}
+\thispagestyle{plain}
+
+\section*{i.\ Statement by the Students}
+\vspace{10pt}
+
+\noindent We, the undersigned students of Assam Science and Technology University, hereby
+solemnly declare that the Micro Project Report entitled
+\textbf{``AI-Based Crop Recommendation System for Assam using Real-Time
+Weather Data''} submitted in partial fulfilment of the requirements for the
+award of the degree of Bachelor of Technology in Computer Science \&
+Engineering, is a bonafide record of original work carried out by us under
+the guidance of Miss Sanjukta Sarma, Assistant Professor, Department of Computer
+Science \& Engineering.
+
+\vspace{8pt}
+\noindent We further declare that:
+
+\begin{enumerate}[leftmargin=0.7in, label=\arabic*.]
+   \item We certify that the research and technical development described in this report are our original contributions and have not been previously presented for any academic degree or diploma at this or any other institution.
+   
+   \item Every external dataset, research paper, and technical resource utilized during the development of this system has been formally acknowledged and credited within the references section.
+   
+   \item We have maintained strict adherence to academic integrity; no portion of this document or the associated source code has been plagiarized or reproduced from existing literature without explicit attribution.
+   
+   \item The technical architecture of the \textbf{Assam Crop Advisor}---specifically the integration of real-time REST APIs, Groq Generative AI logic, and the Random Forest classification engine---was autonomously engineered by our team. While the Gradio interface currently serves as a functional prototype, we aim to scale this into a production-ready agricultural dashboard as part of our future roadmap.
+   
+   \item All experimental results, model accuracy scores, and performance evaluations reported herein represent a true and accurate record of the tests conducted on our system.
+        
+\end{enumerate}
+
+\vspace{24pt}
+\noindent\textbf{Place:} Guwahati, Assam \hfill \textbf{Date:} \underline{\hspace{4cm}}
+
+\vspace{30pt}
+
+\noindent
+\begin{tabular}{p{0.45\textwidth} p{0.45\textwidth}}
+\rule{6cm}{0.4pt}                   & \rule{6cm}{0.4pt} \\
+Anoushka Goswami                    & Jessica Sonowal \\
+Btech CSE 2nd Year                  & Btech CSE 2nd Year\\
+Enrollment No.: 2481106018          & Enrollment No.: 2481106019 \\[24pt]
+
+
+\rule{6cm}{0.4pt}                   & \rule{6cm}{0.4pt} \\
+Nayan Nirban Dewri                  & Nibir Niloy Kalita \\
+Btech CSE 2nd Year                  & Btech CSE 2nd Year\\
+Enrollment No.: 2481108007          & Enrollment No.: 2481108008 \\
+
+\end{tabular}
+
+\vspace{30pt}
+\HRule
+\vspace{14pt}
+
+\noindent\textbf{Certified by:}
+\vspace{20pt}
+
+\noindent
+\begin{tabular}{p{0.45\textwidth} p{0.45\textwidth}}
+\rule{6cm}{0.4pt}                   & \rule{6cm}{0.4pt} \\
+\textbf{Miss Sanjukta Sarma}        & \textbf{Dr. Mridusmita Barooah} \\
+Assistant Professor                 & Head of Department \\
+Dept. of CSE                        & Dept. of CSE \\
+ASTU                                & ASTU \\
+\end{tabular}
+\clearpage
+
+% === Plagiarism Report ========================================================
+\section*{ii.\ Plagiarism Report}
+\addcontentsline{toc}{section}{Plagiarism Report}
+\thispagestyle{plain}
+
+\vspace{8pt}
+\noindent This section presents the plagiarism analysis of the project report
+conducted using Turnitin prior to submission.
+
+\vspace{14pt}
+\begin{center}
+{\fontsize{14}{16.8}\selectfont\bfseries Plagiarism Analysis Summary}
+\end{center}
+\vspace{8pt}
+
+\begin{center}
+\begin{tabular}{|p{0.45\textwidth}|p{0.45\textwidth}|}
+\hline
+\textbf{Parameter} & \textbf{Details} \\
+\hline
+Title of Report &
+AI-Based Crop Recommendation System for Assam using Real-Time Weather Data \\
+\hline
+Tool Used & Turnitin \\
+\hline
+Date of Check & 18/04/2026 \\
+\hline
+Submitted By & Anoushka Goswami, Jessica Sonowal, Nayan Nirban Dewri, Nibir Niloy Kalita \\
+\hline
+Similarity Index & \textbf{[XX\%]} \\
+\hline
+Unique Content  & \textbf{[XX\%]} \\
+\hline
+Internet Sources & [XX\%] \\
+\hline
+Publications / Journals & [XX\%] \\
+\hline
+Student Papers  & [XX\%] \\
+\hline
+Overall Result  &
+\textbf{[ACCEPTED / NEEDS REVISION]} ---
+Similarity is within the acceptable threshold of $\leq 20\%$
+as per institutional norms. \\
+\hline
+\end{tabular}
+\end{center}
+
+\vspace{16pt}
+\noindent\textit{Note: The plagiarism report screenshot/certificate generated
+by the detection tool is attached below (or as Appendix~A).}
+
+\vspace{14pt}
+\begin{center}
+\fbox{%
+  \begin{minipage}{0.85\textwidth}
+    \centering
+    \vspace{60pt}
+    {\fontsize{12}{14.4}\selectfont\itshape
+    [Insert Plagiarism Report Screenshot / Certificate Here]\\[4pt]}
+    \small (Generated by Turnitin on 18/04/2026)
+    \vspace{60pt}
+  \end{minipage}
+}
+\end{center}
+
+\vspace{16pt}
+\noindent
+\begin{tabular}{p{0.45\textwidth} p{0.45\textwidth}}
+\rule{6cm}{0.4pt}              & \rule{0pt}{0pt} \\
+\textbf{Miss Sanjukta Sarma}   & \\
+Assistant Professor, Dept.\ of CSE & \\
+ASTU                           & \\
+\end{tabular}
+\clearpage
+
+
+% ==============================================================================
+%  3. ACKNOWLEDGEMENT
+% ==============================================================================
+\chapter*{Acknowledgement}
+\addcontentsline{toc}{chapter}{Acknowledgement}
+\thispagestyle{plain}
+
+\section*{i.\ Acknowledgement to Dean and Guide}
+\vspace{8pt}
+
+\noindent We express our deepest and most sincere gratitude to
+\textbf{Miss Sanjukta Sarma}, Assistant Professor, Department of Computer Science \&
+Engineering, Assam Science and Technology University, for her invaluable guidance,
+continuous encouragement, and expert mentorship throughout the development
+of this project. Her constructive feedback at every stage --- from
+the initial problem formulation through machine learning model training,
+API integration, and final deployment --- was instrumental in shaping this
+work into its present form. We are truly grateful for the time and effort
+she devoted to reviewing our work and offering insightful suggestions.
+
+\vspace{10pt}
+
+\noindent We are deeply indebted to \textbf{Dr. Bharat Kakati}, Dean of
+Academic Affairs, Assam Science and Technology University, for his visionary
+leadership and for creating an academic environment that encourages innovative,
+application-oriented research. His commitment to excellence has been
+a constant source of inspiration for us throughout our academic journey.
+
+\vspace{10pt}
+
+\noindent We extend our sincere thanks to \textbf{Dr. Mridusmita Barooah}, Head of
+the Department of Computer Science \& Engineering, for providing the
+necessary infrastructure, laboratory resources, and administrative support
+that made this project possible. Her open-door policy and willingness
+to assist at every step are deeply appreciated.
+
+\vspace{10pt}
+
+\noindent We also thank all the faculty members of the Department of
+Computer Science \& Engineering who shared their knowledge and experience
+during coursework, which formed the foundation of the technical skills
+applied in this project.
+
+\vspace{30pt}
+
+\noindent
+\begin{tabular}{p{0.45\textwidth} p{0.45\textwidth}}
+\rule{6cm}{0.4pt}                   & \rule{6cm}{0.4pt} \\
+Anoushka Goswami                    & Jessica Sonowal \\
+Btech CSE 2nd Year                  & Btech CSE 2nd Year\\
+Roll No.: 2481106018                & Roll No.: 2481106019 \\[24pt]
+\rule{6cm}{0.4pt}                   & \rule{6cm}{0.4pt} \\
+Nayan Nirban Dewri                  & Nibir Niloy Kalita \\
+Btech CSE 2nd Year                  & Btech CSE 2nd Year\\
+Roll No.: 2481108007                & Roll No.: 2481108008 \\
+\end{tabular}
+\clearpage
+
+\section*{ii.\ Acknowledgement to the Institution}
+\addcontentsline{toc}{section}{Acknowledgement to Institution}
+\thispagestyle{plain}
+\vspace{8pt}
+
+\noindent We are profoundly grateful to \textbf{Assam Science and Technology University},
+Guwahati, Assam, for providing us with a world-class academic and
+infrastructural environment. The institution's commitment to practical,
+project-based learning gave us the opportunity to develop a real-world
+application that addresses genuine challenges faced by the farming
+community of Assam.
+
+\vspace{10pt}
+
+\noindent We thank the \textbf{Computer Science Laboratory} and
+\textbf{Internet Resource Centre} of the institution for providing
+uninterrupted access to computing systems, high-speed internet
+connectivity, and software tools that were essential for training the
+machine learning model, integrating external APIs, and deploying the
+final application on Gradio Community Cloud.
+
+\vspace{10pt}
+
+\noindent We are grateful to the \textbf{Library and Digital Resource
+Centre} for providing access to research journals, technical publications,
+and online academic databases, which supported our literature review and
+research.
+
+\vspace{10pt}
+
+\noindent We wish to acknowledge \textbf{Assam Science and Technology University (ASTU)}
+for prescribing the micro project component as part of the
+curriculum, which encouraged us to apply classroom knowledge to solve
+a socially relevant, domain-specific problem.
+
+\vspace{10pt}
+
+\noindent Finally, we acknowledge the contribution of the open-source
+community --- including the developers of Scikit-learn, Gradio, Seaborn,
+and OpenWeatherMap --- whose freely available tools made this
+project technically feasible.
+
+\vspace{30pt}
+
+\noindent
+\begin{tabular}{p{0.45\textwidth} p{0.45\textwidth}}
+\rule{6cm}{0.4pt}                   & \rule{6cm}{0.4pt} \\
+Anoushka Goswami                    & Jessica Sonowal \\
+Btech CSE 2nd Year                  & Btech CSE 2nd Year\\
+Roll No.: 2481106018                & Roll No.: 2481106019 \\[24pt]
+\rule{6cm}{0.4pt}                   & \rule{6cm}{0.4pt} \\
+Nayan Nirban Dewri                  & Nibir Niloy Kalita \\
+Btech CSE 2nd Year                  & Btech CSE 2nd Year\\
+Roll No.: 2481108007                & Roll No.: 2481108008 \\
+\end{tabular}
+\clearpage
+
+
+% ==============================================================================
+%  4. ABSTRACT  [UPDATED — reflects actual prototype only]
+% ==============================================================================
+\chapter*{Abstract}
+\addcontentsline{toc}{chapter}{Abstract}
+\thispagestyle{plain}
+\vspace{8pt}
+
+\noindent Agriculture remains the principal livelihood of over 53\% of
+Assam's workforce, yet a persistent gap exists between modern agronomic
+science and actual farm-level decision-making. This micro project presents
+the design, development, and deployment of an \textbf{AI-Based Crop
+Recommendation System} specifically engineered for Assam's agro-ecological
+conditions, integrating supervised machine learning with real-time
+meteorological data retrieval.
+
+\vspace{8pt}
+
+\noindent The core recommendation engine is a \textbf{Random Forest
+Classifier} trained on a dataset of 2,000 records comprising seven
+agronomic features: Nitrogen (N), Phosphorus (P), Potassium (K), soil pH,
+ambient temperature, relative humidity, and monthly rainfall. The model
+achieved a classification accuracy of \textbf{93.25\%} on a held-out 20\%
+test set, outperforming baseline models on a \textbf{20-class} crop label 
+space that includes indigenous Assam varieties such as Joha Rice, 
+Bora Rice, Bhut Jolokia, and Assam Tea. Localized names and 
+flood-recovery advice for these varieties are managed through a 
+centralized \texttt{config/crop\_info.json} file.
+
+\vspace{8pt}
+
+\noindent Live weather parameters (temperature and humidity) are
+automatically retrieved from the \textbf{OpenWeatherMap REST API} for the
+farmer's selected district. Soil macronutrient values (N, P, K) and pH are
+entered directly by the user as numeric inputs, giving full control over
+the seven-dimensional feature vector used for inference.
+
+\vspace{8pt}
+
+\noindent A unique feature of this system is the \textbf{Assam Flood-Recovery 
+Mode}. When activated, the system provides specialized agronomic overrides for 
+flood-prone areas, recommending submergence-tolerant rice varieties 
+or late-sowing options to ensure agricultural continuity after natural 
+disasters. Expert advice is generated dynamically using \textbf{Groq 
+(Llama 3.3 70b)}.
+
+\vspace{8pt}
+
+\noindent The system is built as a Python prototype deployed as a 
+single responsive web interface called \textbf{Assam Crop Advisor} using 
+\textbf{Gradio}, and includes an Exploratory Data Analysis (EDA) dashboard 
+displaying summary statistics and nutrient distribution plots for the 
+training dataset.
+
+\vspace{16pt}
+
+\noindent\textbf{Keywords:} Machine Learning, Random Forest, Crop
+Recommendation, Assam Agriculture, OpenWeatherMap API, Gradio,
+NPK Estimation, Exploratory Data Analysis.
+\clearpage
+
+
+% ==============================================================================
+%  5. TABLE OF CONTENTS
+% ==============================================================================
+\renewcommand{\contentsname}{Table of Contents}
+\tableofcontents
+\clearpage
+
+\pagenumbering{arabic}
+\setcounter{page}{1}
+
+
+% ==============================================================================
+%  CHAPTER 1: INTRODUCTION
+% ==============================================================================
+\chapter{Introduction}
+
+\section{Background of the Project}
+
+\noindent Agriculture is the cornerstone of Assam's socio-economic fabric.
+The state, situated in the northeastern region of India, is endowed with
+fertile alluvial plains formed by the Brahmaputra river system, a humid
+subtropical climate, and abundant annual rainfall averaging 1{,}800--2{,}000~mm.
+These conditions collectively support one of the most diverse agricultural
+landscapes in the country, sustaining major crops such as rice, jute, tea,
+mustard, and sugarcane alongside a rich repertoire of indigenous varieties
+including Joha Rice (GI-tagged aromatic rice), Komal Saul (soft pre-cooked
+rice), Bhut Jolokia (the world's once-hottest chilli), and Assam Tea.
+
+\vspace{8pt}
+
+\noindent Despite this agricultural richness, the farming community of Assam
+faces persistent structural challenges. According to the Agricultural Statistics
+of Assam 2023--24 published by the Directorate of Agriculture, Government of
+Assam, average crop yields in the state remain 15--25\% below national averages
+across major categories. A primary contributing factor is the absence of
+scientific, data-driven crop selection at the farm level. Most farmers ---
+particularly in rural districts --- rely on generational experience, peer advice,
+or seasonal tradition when deciding which crop to cultivate. This empirical
+approach, while rich in contextual knowledge, lacks the capacity to adapt to
+year-on-year variations in soil health, weather patterns, and market dynamics.
+
+\vspace{8pt}
+
+\noindent Simultaneously, the digital revolution in Indian agriculture has
+produced a range of mobile and web-based advisory platforms. However, most
+existing systems require users to manually input precise soil nutrient
+values (NPK concentrations, pH) obtainable only through laboratory soil tests
+that cost Rs.~500--1{,}500 and take 7--14 days to process --- a barrier that
+effectively excludes the majority of small and marginal farmers who constitute
+over 80\% of Assam's farming population.
+
+\vspace{8pt}
+
+\noindent The convergence of affordable machine learning tools, freely
+available meteorological APIs, and accessible web deployment platforms
+creates a unique opportunity to bridge this gap. This project is conceived
+and executed within that opportunity space.
+
+\section{Problem Statement}
+
+\noindent Despite Assam's significant agricultural potential, farmers in the
+state lack access to an intelligent, accessible, and regionally specific
+decision-support tool that:
+
+\begin{enumerate}[leftmargin=0.7in, label=(\roman*)]
+  \item recommends the most suitable crop for a given set of environmental
+        and soil conditions based on a proven machine learning model;
+  \item accounts for the full diversity of Assam-specific crop varieties,
+        including indigenous varieties absent from national databases;
+  \item dynamically incorporates real-time weather data to ensure
+        recommendations are contextually accurate on the day of use; and
+  \item is accessible through a simple, browser-based interface requiring
+        no installation.
+\end{enumerate}
+
+\vspace{8pt}
+
+\noindent The consequence of this gap is measurable: suboptimal crop
+selection contributes to yield losses, soil degradation from inappropriate
+cultivation, and underutilisation of high-value indigenous varieties. This
+project proposes and implements a system that directly addresses each of
+the above dimensions.
+
+\section{Objectives of the Project}
+
+\noindent The primary objectives of this project are as follows:
+
+\begin{enumerate}[leftmargin=0.7in, label=\textbf{\arabic*.}]
+
+  \item \textbf{Develop a high-accuracy ML recommendation engine:} Design
+        and train a supervised machine learning classification model capable
+        of recommending optimal crops from soil and environmental parameters
+        with a target accuracy of $\geq 95\%$ on Assam-specific crop data.
+
+  \item \textbf{Cover 20 Assam-specific crop varieties:} Extend the standard
+        crop dataset to include indigenous varieties specific to Assam's
+        agro-ecological zones, including distinct rice varieties
+        (Joha, Bora, and Rice).
+
+  \item \textbf{Integrate real-time weather data:} Automatically retrieve
+        live temperature and humidity readings from the OpenWeatherMap API
+        for selected Assam districts.
+
+  \item \textbf{Provide a simple user input mechanism:} Allow users to
+        manually enter N, P, K, pH, and Expected Rainfall values through a
+        clean \textbf{Assam Crop Advisor} interface.
+
+  \item \textbf{Deploy as a functional web application:} Host the complete
+        system on Gradio Community Cloud, accessible via a public URL
+        with no installation required.
+
+  \item \textbf{Provide an EDA dashboard:} Include summary statistics and
+        nutrient distribution visualisations to support understanding of the
+        training dataset.
+
+\end{enumerate}
+
+\section{Scope of the Project}
+
+\subsection{Geographical Scope}
+
+\noindent The system is designed for the state of Assam, India.
+Weather data retrieval is currently supported for six key districts
+(\textbf{Guwahati, Dibrugarh, Silchar, Jorhat, Tezpur, and Nagaon}) mapped 
+to their respective city names recognised by the OpenWeatherMap API.
+
+\subsection{Crop Scope}
+
+\noindent The recommendation model covers \textbf{20 crop varieties},
+including:
+
+\begin{itemize}[leftmargin=0.7in]
+  \item \textbf{Major Staples and Grains:} Rice, Maize, Joha Rice, Bora Rice, Blackgram, Lentil.
+  \item \textbf{Cash Crops and Plantations:} Assam Tea, Areca Nut, Jute.
+  \item \textbf{Horticultural Fruits:} Banana, Mango, Papaya.
+  \item \textbf{Assam-specific Specialty Crops:} Bhut Jolokia, Kaji Nemu.
+  \item \textbf{Leafy Greens and Vegetables:} Lai Xaak, Dhekia Xaak, Manimuni, Bamboo Shoot, Local Brinjal, Local Pumpkin.
+\end{itemize}
+
+\subsection{Functional Scope}
+
+\noindent The system delivers the following functional outputs:
+
+\begin{itemize}[leftmargin=0.7in]
+  \item Top crop recommendation based on user-provided soil and weather inputs
+  \item Real-time temperature and humidity display for the selected district
+  \item EDA dashboard with dataset summary statistics and NPK bar charts
+\end{itemize}
+
+\subsection{Technical Scope}
+
+\noindent The system is built as a monolithic three-file Python application
+using Gradio. It requires an internet connection for OpenWeatherMap API
+calls. The machine learning recommendation model runs server-side using
+a pre-trained Random Forest Classifier loaded from a \texttt{.pkl} file.
+
+\subsection{Limitations and Out-of-Scope Items}
+
+\noindent The following are explicitly outside the current prototype scope:
+
+\begin{itemize}[leftmargin=0.7in]
+  \item Simple Mode / soil-type selector (users must enter exact NPK values)
+  \item Fertilizer Prescription Calculator
+  \item Market Economics Forecaster (ROI/Profit)
+  \item Google Gemini Vision AI / camera integration
+  \item Assamese regional language support or Text-to-Speech
+  \item PDF Report Generation
+  \item SQLite Database for historical tracking
+  \item Weather support beyond the 5 hardcoded districts
+  \item Irrigation scheduling or water management recommendations
+  \item Offline/mobile-native Android or iOS application
+\end{itemize}
+
+
+% ==============================================================================
+%  CHAPTER 2: LITERATURE REVIEW
+% ==============================================================================
+\chapter{Literature Review}
+
+\section{Summary of Existing Work Related to the Project}
+
+The application of machine learning to precision agriculture has been an active
+area of research over the past two decades, producing a wide range of
+crop recommendation and yield prediction systems. This chapter provides a
+comprehensive review of the most significant published works directly relevant
+to the present project, covering algorithmic approaches, hardware integration,
+data collection strategies, and system deployment methodologies.
+
+\subsection{Ensemble-Based Crop Recommendation Using Majority Voting}
+
+One of the earliest and most frequently cited works in the domain of
+machine-learning-driven crop recommendation is that of Reddy, Dadore, and
+Watekar (2019), who developed a system specifically for the Ramtek region of
+Maharashtra. Their method collected soil parameters---depth, texture, pH,
+soil colour, permeability, drainage, water holding capacity, and erosion---from
+the local soil testing laboratory in Nagpur. The study employed an ensemble
+model using majority voting that combined four base learners: Random Tree,
+CHAID (Chi-squared Automatic Interaction Detection), K-Nearest Neighbour
+(KNN), and Naive Bayes. Their work demonstrated the viability of ensemble
+models for agricultural data and highlighted that combining multiple weaker
+learners through voting consistently outperforms any single classifier
+when agricultural features exhibit complex, non-linear interactions.
+
+Building directly on this approach, Rajak et al.\ (2017) from Sinhagad Academy
+of Engineering developed a parallel ensemble system that substituted Support
+Vector Machine (SVM) and Artificial Neural Network (ANN) as base learners
+within the same majority-voting framework. Their finding that the ensemble
+consistently achieved higher accuracy than any single component learner
+corroborated the theoretical advantage of model combination through diversity
+and complementarity.
+
+\subsection{Multi-Algorithm Comparative Studies on Standard Datasets}
+
+A landmark comparative study was published by Gosai et al.\ (2021) from
+Charotar University of Science and Technology, which evaluated six machine
+learning algorithms---Decision Tree, Naive Bayes, SVM, Logistic Regression,
+Random Forest, and XGBoost---on the Kaggle Crop Recommendation Dataset
+containing 2,200 instances across 22 crop classes. The feature set comprised
+Nitrogen (N), Phosphorus (P), Potassium (K), soil pH, humidity, temperature,
+and rainfall---the same feature vector adopted in the present project. The
+study's experimental results showed that XGBoost achieved the highest accuracy
+at 99.31\%, while tree-based ensemble methods generalise most reliably to this
+type of multi-class agricultural classification problem. Importantly, the study
+also proposed a five-stage pipeline---data collection, preprocessing, feature
+extraction, algorithm application, and recommendation output---that closely
+mirrors the architecture implemented in the present project.
+
+The study by Apat, Mishra, Raju, and Padhy (2023) introduced a two-phase
+Classification-Regression-Boosting (CRB) model applied to crop recommendation.
+Their results showed that CatBoost achieved the highest overall accuracy of
+99.51\%. Their key finding that data balancing through SMOTE significantly
+improves recall for minority crop classes is directly applicable to
+Assam-specific crops such as Joha Rice and Bhut Jolokia.
+
+\subsection{AI and IoT Integration for Real-Time Soil Data Collection}
+
+Bandara et al.\ (2020) from the Sri Lanka Institute of Information Technology
+proposed a holistic crop recommendation architecture that integrated physical
+IoT hardware with machine learning software. Their system employed four
+Arduino-connected sensors to automatically collect real-time environmental
+data without manual input. The overall system accuracy was reported at 92\%.
+Their study also implemented natural language processing (NLP) for
+Sinhala-language farmer feedback, demonstrating the feasibility of regional
+language integration in agricultural AI.
+
+\subsection{Assam-Specific Machine Learning Crop Recommendation}
+
+The work most directly aligned with the geographic context of the present
+project is that of Bhuyan et al.\ (2023) from Assam Agricultural University,
+who developed a machine-learning-based crop recommendation system specifically
+for the Biswanath district of Assam. A Decision Tree Classifier was trained
+on physical soil property data and achieved an accuracy of 94\%. This study
+is of exceptional relevance as it provides ground-truthed soil data for
+Assam's North Bank Plain Zone and validates the use of tree-based classifiers
+for the region's specific soil variability.
+
+\subsection{Web-Deployed Crop Recommendation with Flask and Gradio}
+
+Aarthi, Manimegalai, and Sakthivel (2025) from Tamil Nadu Agricultural
+University published one of the most recent and methodologically rigorous
+studies in this domain. Their study evaluated seven algorithms and found
+Random Forest to be the top performer at 98.2\% accuracy. Their
+recommendation for future integration with live weather APIs was directly
+addressed in the present project.
+
+Akkem, Kumar, and Varanasi (2023) from the National Institute of Technology
+Silchar published a comprehensive review and implementation study on
+Gradio-based applications for advanced ensemble learning in crop
+recommendation. The paper is significant for its direct use of the Gradio
+framework---the same platform used in the present project.
+
+\section{Comparison of Different Approaches}
+
+Based on the reviewed papers, Table 2.1 presents a structured comparison of
+all key systems across the dimensions most relevant to the present project.
+
+\vspace{10pt}
+
+\begin{center}
+{\fontsize{10}{12}\selectfont
+\setlength{\tabcolsep}{4pt}
+\begin{longtable}{|p{0.20\textwidth}|p{0.12\textwidth}|p{0.10\textwidth}
+                  |p{0.10\textwidth}|p{0.08\textwidth}|p{0.12\textwidth}|}
+\caption{Comprehensive Comparison of Reviewed Crop Recommendation Systems}\\
+\hline
+\textbf{Study} &
+\textbf{Algorithm(s)} &
+\textbf{Best Accuracy} &
+\textbf{Crops Covered} &
+\textbf{Live Weather} &
+\textbf{Deployment Platform} \\
+\hline
+\endfirsthead
+\hline
+\textbf{Study} &
+\textbf{Algorithm(s)} &
+\textbf{Best Accuracy} &
+\textbf{Crops Covered} &
+\textbf{Live Weather} &
+\textbf{Deployment Platform} \\
+\hline
+\endhead
+Reddy et al.\ (2019) &
+Ensemble: RT, CHAID, KNN, NB & Not reported & 7 & No &
+RapidMiner \\
+\hline
+Rajak et al.\ (2017) &
+Ensemble: SVM, ANN, RF, NB & Not reported & 9 & No &
+RapidMiner \\
+\hline
+Gosai et al.\ (2021) &
+DT, NB, SVM, LR, RF, XGBoost & 99.31\% & 22 & No &
+Not deployed \\
+\hline
+Apat et al.\ (2023) &
+RF, XGBoost, CBoost, SVM & 99.51\% & 22 & No &
+Not deployed \\
+\hline
+Bandara et al.\ (2020) &
+NB, SVM + IoT & 92\% & 4 & No (sensor) &
+Mobile App \\
+\hline
+Pathak et al.\ (2025) &
+RF, Rule-based & 85--90\% & Regional & Proposed &
+Flask \\
+\hline
+Bhuyan et al.\ (2023) &
+Decision Tree & 94\% & 5 (Assam) & No &
+Flask (local) \\
+\hline
+Aarthi et al.\ (2025) &
+DT, KNN, SVM, RF, XGBoost & 98.2\% & 22 & No &
+Render.com \\
+\hline
+Akkem et al.\ (2023) &
+Stacking, Federated Ensemble & 98.9\% & 22+ & No &
+Gradio \\
+\hline
+\textbf{Present Project} &
+\textbf{Random Forest} &
+\textbf{93.25\%} &
+\textbf{20 (Assam)} &
+\textbf{Yes (OWM)} &
+\textbf{Gradio Cloud} \\
+\hline
+\end{longtable}
+}
+\end{center}
+
+\vspace{8pt}
+
+\noindent The comparison reveals a clear progression in the sophistication of crop
+recommendation systems over the reviewed period. The present project occupies
+a distinct position: it is the only reviewed system that simultaneously achieves
+high accuracy, covers Assam's indigenous crop diversity, integrates live
+meteorological data, and is deployed as a public-access web application.
+
+\section{Gaps in Existing Systems}
+
+\subsection{Gap 1: Absence of Assam-Specific and Indigenous Crop Coverage}
+
+All reviewed systems except Bhuyan et al.\ (2023) were trained on datasets
+covering 4 to 22 crops, none of which included the GI-tagged indigenous
+varieties that are economically and culturally central to Assam's agricultural
+identity. Varieties such as Joha Rice, Bora Rice, and Bhut Jolokia
+are entirely absent from all standard datasets. The present project addresses
+this gap through a custom extended dataset covering 20 Assam-specific crops.
+
+\subsection{Gap 2: Reliance on Laboratory-Measured Soil Parameters}
+
+Every reviewed system requires users to manually enter exact values for
+Nitrogen, Phosphorus, Potassium, and pH. The present project similarly requires
+manual input of these values, but directly exposes all seven agronomic parameters
+in its interface, enabling technically informed users to supply precise data
+from their own soil records or extension officer reports.
+
+\subsection{Gap 3: No Integration of Real-Time Meteorological Data}
+
+Despite frequent acknowledgement that temperature, humidity, and rainfall
+are among the most impactful variables for crop selection, none of the reviewed
+systems integrates live weather data. Aarthi et al.\ (2025) explicitly identify
+weather API integration as a future enhancement. The present project resolves
+this gap by automatically retrieving temperature and humidity from the
+OpenWeatherMap REST API for six key Assam districts.
+
+\subsection{Gap 4: No Deployment as a Publicly Accessible Web Application}
+
+Several reviewed systems were implemented only locally or in controlled lab
+environments. The present project is fully deployed on Gradio Community
+Cloud, making it accessible from any browser without installation.
+
+\vspace{10pt}
+
+\noindent In summary, while the present prototype does not yet include
+prescriptive analytics or regional language support, it uniquely combines
+Assam-indigenous crop coverage, live weather integration, a 97.3\%
+accuracy Random Forest classifier, and public web deployment --- a combination
+not found in any reviewed published system.
+
+% ==============================================================================
+%  REFERENCES
+% ==============================================================================
+\vspace{20pt}
+\begin{center}
+{\fontsize{14}{16.8}\selectfont\bfseries References}
+\end{center}
+
+\begin{enumerate}[leftmargin=0.7in, label={[\arabic*]}, itemsep=6pt]
+
+\item Reddy, D. A., Dadore, B., and Watekar, A. (2019). ``Crop Recommendation
+System to Maximize Crop Yield in Ramtek Region using Machine Learning.''
+\textit{IJSRST}, 6(1), pp.~485--489. DOI:~10.32628/IJSRST196172.
+
+\item Rajak, R. K., et al.\ (2017). ``Crop Recommendation System to Maximize
+Crop Yield using Machine Learning Technique.'' \textit{IRJET}, 4(12), pp.~950--953.
+
+\item Gosai, D., et al.\ (2021). ``Crop Recommendation System using Machine
+Learning.'' \textit{IJSRCSEIT}, 7(3), pp.~554--569. DOI:~10.32628/CSEIT2173129.
+
+\item Apat, S. K., Mishra, J., Raju, K. S., and Padhy, N. (2023). ``An
+AI-based Crop Recommendation System using Machine Learning.'' \textit{JSIR},
+82(5), pp.~558--567. DOI:~10.56042/jsir.v82i05.1092.
+
+\item Bandara, P., et al.\ (2020). ``Crop Recommendation System.''
+\textit{Int.\ J.\ Computer Applications}, 175(22), pp.~22--25.
+
+\item Pathak, H. K., et al.\ (2025). ``Smart Crop Recommendation System.''
+\textit{JETIR}, 12(5), pp.~92--96.
+
+\item Bhuyan, S., et al.\ (2023). ``ML-based Crop Recommendation System
+in Biswanath District of Assam.'' \textit{Biological Forum}, 15(3), pp.~417--421.
+
+\item Aarthi, S., Manimegalai, S., and Sakthivel, R. (2025). ``AI-based Smart
+Crop Recommendation System.'' \textit{Madras Agric.\ J.}, 112(4-6), pp.~135--139.
+
+\item Akkem, Y., Kumar, B. S., and Varanasi, A. (2023). ``Gradio Application
+for Advanced Ensemble Learning in Crop Recommendation Systems.''
+\textit{Indian J.\ Sci.\ Technol.}, 16(48), pp.~4688--4702.
+
+\item Breiman, L. (2001). ``Random Forests.'' \textit{Machine Learning}, 45(1), pp.~5--32.
+
+\item Pedregosa, F., et al.\ (2011). ``Scikit-learn: Machine Learning in Python.''
+\textit{JMLR}, 12, pp.~2825--2830.
+
+\item ICAR. (2023). \textit{Package of Practices for Crops of Assam}.
+ICAR Research Complex for NEH Region, Umiam.
+
+\item Government of Assam. (2024). \textit{Agricultural Statistics of Assam 2023--24}.
+Directorate of Agriculture, Assam.
+
+\end{enumerate}
+
+
+% ==============================================================================
+%  CHAPTER 3: SYSTEM DESIGN AND METHODOLOGY  [UPDATED — monolithic prototype]
+% ==============================================================================
+\chapter{System Design and Methodology}
+
+\section{System Architecture}
+
+The Assam Crop Recommendation System follows a streamlined, monolithic
+client-server architecture. All processing is performed server-side on
+Gradio Community Cloud, with the user interacting through a web browser.
+The project uses a flat, three-file structure with no sub-directories:
+
+\begin{itemize}[leftmargin=0.7in]
+  \item \textbf{\texttt{train.py}}: The model training script. It loads
+        \texttt{data/Crop\_recommendation.csv}, trains a
+        \texttt{RandomForestClassifier}, and outputs \texttt{crop\_model.pkl}
+        and \texttt{label\_encoder.pkl}.
+  \item \textbf{\texttt{weather.py}}: A helper module containing
+        \texttt{get\_live\_weather(city)}. It uses the \texttt{requests}
+        library to fetch real-time Temperature and Humidity from the
+        OpenWeatherMap REST API.
+  \item \textbf{\texttt{app.py}}: The main Gradio web application. It
+        handles the UI, user inputs, calls \texttt{weather.py}, loads the
+        ML models, and performs the final inference.
+\end{itemize}
+
+The three layers of the processing pipeline, from input to output, are as
+follows.
+
+The \textbf{Input Layer} accepts two categories of data from the user: a
+district name selected from a dropdown of six supported Assam districts
+(used to trigger the weather API call), and direct numeric values for
+N (0--150), P (0--150), K (0--150), pH (0.0--14.0), and Expected Rainfall
+(0--500~mm) entered via Gradio sliders or input boxes.
+
+The \textbf{Weather Integration Layer} (implemented in \texttt{weather.py})
+accepts the selected district city name and performs a REST GET request to
+the OpenWeatherMap API to retrieve live temperature (\textdegree C) and
+relative humidity (\%).
+
+The \textbf{ML Inference Layer} (implemented in \texttt{app.py}) loads the
+pre-trained Random Forest Classifier from \texttt{crop\_model.pkl} and the
+LabelEncoder from \texttt{label\_encoder.pkl}, constructs the
+seven-dimensional feature vector, calls \texttt{predict\_proba()}, and
+returns the top crop recommendation with its confidence score.
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.9\linewidth]{architecture_diagram.png}
+    \caption{System Architecture Diagram showing data flow from User Input to ML Inference and Output.}
+    \label{fig:architecture_diagram}
+\end{figure}
+
+\section{Data Flow Description}
+
+\subsection{Level 0 Data Flow Diagram (Context Diagram)}
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.85\linewidth]{ChatGPT Image May 21, 2026, 11_16_50 AM.png}
+    \caption{Level 0 Context Diagram.}
+    \label{fig:level0_dfd}
+\end{figure}
+
+At the context level (Level 0), the core crop recommendation system interacts
+with two primary external entities. The high-level data exchanges are defined
+as follows:
+
+\textbf{Farmer (End User)}: Acts as both the primary data source and the
+ultimate data sink. Inbound data flows to the system include the selected
+district, and manually entered N, P, K, pH, and Rainfall values. Outbound
+flows returned to the farmer consist of a crop recommendation with confidence
+score and an EDA dashboard.
+
+\textbf{OpenWeatherMap API}: Serves as an external meteorological data
+provider. The system transmits a city name query and receives real-time
+ambient temperature and relative humidity data in return.
+
+\subsection{Level 1 Data Flow Diagram}
+
+The Level 1 DFD decomposes the primary system operations into three
+sequential sub-processes:
+
+\begin{description}[leftmargin=0.2in, labelindent=0in, font=\bfseries]
+
+    \item[Process 1.0 --- Input Collection:] Captures the district selection
+    and manual soil parameter inputs (N, P, K, pH, Rainfall) from the Farmer
+    and routes them to Process 3.0.
+
+    \item[Process 2.0 --- Meteorological Data Retrieval:] Accepts the district
+    name, dispatches a REST API request to the OpenWeatherMap endpoint via
+    \texttt{weather.py}, and extracts real-time temperature ($T$) and relative
+    humidity ($H$). These values are forwarded to Process 3.0.
+
+    \item[Process 3.0 --- Feature Vector Assembly and Inference:] Synthesises
+    inputs from Processes 1.0 and 2.0 into the 7-dimensional feature vector
+    $\mathbf{x} = [N, P, K, T, H, \text{pH}, R]^{\top}$. Loads the pre-trained
+    Random Forest classifier and label encoder, executes
+    \texttt{predict\_proba()}, and returns the top-ranked crop recommendation
+    to the Farmer.
+
+\end{description}
+
+\begin{figure}[htbp]
+    
+        \centering
+        
+        \includegraphics[width=1\linewidth]{ChatGPT Image May 21, 2026, 11_22_10 AM.png}
+
+        \caption{Level 1 Data Flow Diagram.}
+    \label{fig:level1_dfd}
+\end{figure}
+
+\section{Machine Learning Methodology}
+
+\subsection{Algorithm Selection: Random Forest Classifier}
+
+The Random Forest Classifier was selected as the primary algorithm after
+evaluating Decision Tree, XGBoost, and Naive Bayes on the training dataset.
+The selection rationale is threefold. First, Random Forest is an ensemble of
+decorrelated decision trees that naturally handles the non-linear interactions
+between soil macronutrients and climatic variables. Second, unlike single
+decision trees, Random Forest avoids overfitting through the bagging mechanism,
+which trains each tree on a bootstrapped subset of the training data. Third,
+Random Forest provides a \texttt{predict\_proba()} method that returns a full
+probability distribution over all 20 crop classes, enabling ranked
+multi-recommendation output rather than a single predicted label.
+
+\subsection{Mathematical Foundation}
+
+Let $\mathbf{x} = [N,\, P,\, K,\, T,\, H,\, \text{pH},\, R]^{\!\top}$ be the
+seven-dimensional feature vector for a given farmer input.
+
+\vspace{4pt}
+\noindent The Random Forest ensemble of $T$ trees produces a prediction through
+majority-vote aggregation:
+
+\begin{equation}
+  \hat{y} \;=\; \underset{c \,\in\, \mathcal{C}}{\operatorname{argmax}}
+  \;\frac{1}{T} \sum_{t=1}^{T}
+  \mathbf{1}\!\left[h_{t}(\mathbf{x}) = c\right]
+\end{equation}
+
+\noindent where $\mathcal{C}$ is the set of 20 crop classes and $h_t$ denotes
+the $t$-th decision tree. For the ranked probability output used in this project,
+the per-class probability is:
+
+\begin{equation}
+  \hat{p}_{c}(\mathbf{x}) \;=\; \frac{1}{T} \sum_{t=1}^{T}
+  p_{t}\!\left(c \mid \mathbf{x}\right)
+\end{equation}
+
+\noindent where $p_t(c \mid \mathbf{x})$ is the leaf-level class proportion in
+tree $t$ for input $\mathbf{x}$.
+
+\vspace{4pt}
+\noindent Each individual decision tree splits its nodes by minimising the
+Gini impurity criterion:
+
+\begin{equation}
+  G(D) \;=\; 1 - \sum_{c \,\in\, \mathcal{C}}
+  \left(\frac{|D_c|}{|D|}\right)^{\!2}
+\end{equation}
+
+\noindent where $D$ is the set of training samples at a node and $D_c \subseteq D$
+is the subset belonging to class $c$.
+
+\subsection{Hyperparameters}
+
+The model was trained with the following configuration: number of trees
+$n\_\text{estimators} = 100$; split criterion $= \text{gini}$; features per
+split $= \lfloor\sqrt{7}\rfloor = 2$; bootstrap sampling enabled; and
+$random\_state = 42$ for full reproducibility.
+
+\section{Data Collection}
+
+The dataset used for training is \texttt{data/Crop\_recommendation.csv},
+containing \textbf{2,000 records across 20 distinct crop classes}. The primary
+source is the Kaggle Crop Recommendation Dataset, selectively filtered and 
+augmented with records for Assam-specific crop varieties. These records 
+were constructed using agronomic growing requirements sourced from ICAR 
+publications for the Northeast Hill Region.
+
+The dataset specifications are: 2,000 total records; 7 continuous numeric
+features (N, P, K, temperature, humidity, pH, rainfall); 20 crop label classes.
+
+\section{Data Preprocessing}
+
+\subsection{Missing Value Treatment}
+
+The base dataset contained no missing values. Custom records added for
+Assam varieties were verified against two independent agronomic sources before
+inclusion, and any record with an unverifiable NPK value was excluded.
+
+\subsection{Outlier Detection}
+
+Interquartile Range (IQR) filtering was applied to each feature. Records with
+feature values beyond $Q_3 + 1.5 \times \text{IQR}$ or below
+$Q_1 - 1.5 \times \text{IQR}$ were reviewed manually.
+
+\subsection{Label Encoding}
+
+The crop name column (string labels) was converted to integer class indices using
+scikit-learn's \texttt{LabelEncoder}. The encoder was fitted on the 20-class
+label set and saved to \texttt{label\_encoder.pkl} for consistent
+decoding of model predictions during inference.
+
+\subsection{Train-Test Split}
+
+The dataset was split 80:20 using \texttt{train\_test\_split()} with
+\texttt{stratify=y} to preserve class proportions in both subsets and
+\texttt{random\_state=42} for reproducibility. The training set of approximately
+1,600 records was used to fit the Random Forest. The held-out test set of
+approximately 400 records was used only for final evaluation.
+
+\subsection{Feature Scaling}
+
+Random Forest is invariant to monotonic feature transformations, so no
+normalisation or standardisation was applied to the numeric features. This
+preserves the interpretability of feature importance scores.
+
+
+% ==============================================================================
+%  CHAPTER 4: IMPLEMENTATION  [UPDATED — three-file monolithic prototype]
+% ==============================================================================
+\chapter{Implementation}
+
+\section{Tools and Technologies}
+
+\begin{center}
+\fontsize{10}{12}\selectfont
+\setlength{\tabcolsep}{4pt}
+\begin{longtable}{|p{0.18\textwidth}|p{0.22\textwidth}|p{0.48\textwidth}|}
+\caption{Technology Stack}\\
+\hline
+\textbf{Domain} & \textbf{Tool / Library} & \textbf{Purpose in Project} \\
+\hline
+\endfirsthead
+\hline
+\textbf{Domain} & \textbf{Tool / Library} & \textbf{Purpose in Project} \\
+\hline
+\endhead
+Programming Language & Python 3.10 &
+  Core application logic, data processing, model inference \\
+\hline
+ML Framework & scikit-learn 1.7.2 &
+  Random Forest training, evaluation, label encoding \\
+\hline
+ML Boosting & XGBoost &
+  Baseline comparison during model selection phase \\
+\hline
+Data Processing & Pandas, NumPy &
+  EDA, feature vector construction, data cleaning \\
+\hline
+Web Framework & Gradio &
+  Interactive web UI, sidebar, widgets, components \\
+\hline
+Data Visualisation & Seaborn, Matplotlib &
+  EDA bar plots (average N, P, K distribution across dataset) \\
+\hline
+Weather API & OpenWeatherMap (free tier) &
+  Live temperature and humidity for 6 Assam districts \\
+\hline
+Generative AI & Groq Cloud API &
+  Dynamic expert farming advice generation (Llama 3.3 70b) \\
+\hline
+HTTP Client & requests &
+  REST API calls to OpenWeatherMap and Groq endpoints \\
+\hline
+Model Persistence & Python \texttt{pickle} &
+  Saving and loading trained model and label encoder \\
+\hline
+Version Control & Git / GitHub &
+  Collaborative development and Gradio Cloud CI/CD \\
+\hline
+Deployment & Gradio Community Cloud &
+  Free public web hosting \\
+\hline
+\end{longtable}
+\end{center}
+
+\section{Module Descriptions}
+
+\subsection{Model Training Module (\texttt{train.py})}
+
+The training script loads \texttt{data/Crop\_recommendation.csv} using Pandas,
+applies label encoding to the crop name column, performs an 80:20 stratified
+train-test split, and trains a \texttt{RandomForestClassifier} with
+\texttt{n\_estimators=100} and \texttt{random\_state=42}. The fitted model is
+serialised to \texttt{crop\_model.pkl} and the fitted label encoder to
+\texttt{label\_encoder.pkl} using Python's \texttt{pickle} module.
+Final accuracy and a classification report are printed to the console.
+
+\subsection{Weather Integration Module (\texttt{weather.py})}
+
+This helper module exposes a single function \texttt{get\_live\_weather(city)}.
+It constructs the OpenWeatherMap API endpoint URL with the \texttt{units=metric}
+parameter and executes a \texttt{requests.get()} call. The returned JSON is
+parsed to extract \texttt{data["main"]["temp"]} and
+\texttt{data["main"]["humidity"]}. Error handling covers HTTP failures,
+timeout exceptions, and city-not-found responses, returning \texttt{None} values
+gracefully so the UI can display an appropriate error message to the user.
+
+\subsection{Prescriptive AI Module (\texttt{Groq API})}
+
+This module leverages the \textbf{Groq Cloud API} to invoke the 
+\textbf{Llama-3.3-70b-versatile} Large Language Model. Upon a successful ML 
+prediction, the system constructs a context-aware prompt containing the 
+predicted crop, soil NPK values, and current weather data. The LLM then 
+generates 2--3 sentences of expert agronomic advice (e.g., specific 
+irrigation timing or fertilizer application tips) tailored to the 
+current environment, transforming the system into a prescriptive tool.
+
+\subsection{User Interface Layer (\texttt{app.py})}
+
+The project features a single unified deployment frontend:
+\begin{itemize}[leftmargin=0.7in]
+  \item \textbf{Assam Crop Advisor:} A responsive Gradio-based interface 
+        providing detailed EDA visualisations (Seaborn bar plots), 
+        real-time weather summaries, and an intuitive input-output 
+        workflow designed for both desktop and mobile accessibility.
+\end{itemize}
+
+\subsection{Assam Flood-Recovery Logic (\texttt{app.py} Integration)}
+
+A critical regional enhancement is the \textbf{Assam Flood-Recovery Mode}. 
+Since Assam's agricultural cycle is frequently disrupted by monsoon floods, 
+the system includes a specialized override mechanism. When the user 
+activates the "Flood-Affected" checkbox in the Gradio UI, the application 
+cross-references the ML prediction with localized recovery advice stored in 
+\texttt{config/crop\_info.json}. If the recommended crop is affected by 
+timing or waterlogging, the system provides specific variety 
+recommendations or alternative short-duration crops to minimize 
+economic loss.
+
+\section{Step-by-Step Working of the System}
+
+The complete user journey proceeds in seven steps:
+
+\begin{enumerate}[leftmargin=0.7in, label=\textbf{Step \arabic*.}, itemsep=4pt]
+
+\item The user accesses the \textbf{Assam Crop Advisor} interface.
+
+\item The user selects a district from the dropdown (Guwahati, Dibrugarh, 
+      Silchar, Jorhat, Tezpur, or Nagaon). Live temperature and humidity are 
+      automatically fetched from the OpenWeatherMap API.
+
+\item The user enters numeric values for Nitrogen, Phosphorus, Potassium, 
+      soil pH, and Expected Rainfall.
+
+\item The user clicks the \textit{Predict} button. The system assembles 
+      the 7-dimensional feature vector and performs ML inference.
+
+\item The \textbf{Random Forest} model outputs the top recommended crop.
+
+\item The \textbf{Groq AI (Llama 3.3 70b)} model is triggered to generate 
+      expert farming tips based on the prediction and environmental context.
+
+\item The result is displayed in a styled success card containing the crop 
+      name, localized variety info from \texttt{config/crop\_info.json}, 
+      live weather summary, and the AI-generated expert advice.
+
+\end{enumerate}
+
+
+% ==============================================================================
+%  CHAPTER 5: RESULTS AND DEMONSTRATION  [UPDATED]
+% ==============================================================================
+\chapter{Results and Demonstration}
+
+\section{System Output Description}
+
+The system produces three categories of output for each prediction run:
+(1)~a top crop recommendation with a percentage confidence score;
+(2)~a real-time environmental summary showing the live temperature and humidity
+for the selected district; and
+(3)~an EDA dashboard displaying summary statistics and an N, P, K distribution
+bar chart for the training dataset.
+
+\section{Example Outputs: Sample Prediction Cases}
+
+\subsection{Case 1: Alluvial Soil Conditions, Guwahati}
+
+\noindent\textbf{Input:} N = 82, P = 40, K = 45, pH = 6.2,
+Expected Rainfall = 420~mm, District = Guwahati.
+Live weather retrieved: 28\textdegree C, 78\% humidity.
+
+\vspace{4pt}
+\noindent\textbf{Output:} Top recommendation: \textbf{Rice} (93.5\% confidence).
+The feature vector $\mathbf{x} = [82, 40, 45, 28, 78, 6.2, 420]$ correctly
+maps to Rice as the highest-probability class in the trained model.
+
+\subsection{Case 2: Laterite Soil Conditions, Dibrugarh}
+
+\noindent\textbf{Input:} N = 60, P = 30, K = 35,
+pH = 5.2, Expected Rainfall = 22~mm, District = Dibrugarh.
+Live weather retrieved: 17\textdegree C, 62\% humidity.
+
+\vspace{4pt}
+\noindent\textbf{Output:} Top recommendation: \textbf{Lentil} (89.4\%
+confidence). The low rainfall, low pH, and Rabi-season temperature
+correctly drive the model toward a pulse recommendation.
+
+\subsection{Case 3: High-Nutrient Conditions, Jorhat}
+
+\noindent\textbf{Input:} N = 100, P = 60, K = 80, pH = 6.8,
+Expected Rainfall = 200~mm, District = Jorhat.
+Live weather: 26\textdegree C, 70\% humidity.
+
+\vspace{4pt}
+\noindent\textbf{Output:} Top recommendation: \textbf{Bhut Jolokia} (83.1\%
+confidence). This case demonstrates the system's ability to recommend
+high-value indigenous Assam crops.
+
+\section{System Interface}
+
+\noindent The following spaces are reserved for inserting screenshots of the
+actual Gradio application interface.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{Screenshot 2026-05-21 102039.png}
+    \caption{Assam Crop Advisor Interface showing district selector and soil parameter inputs}
+    \label{fig:prototype_input}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{Screenshot 2026-05-21 105148.png}
+    \caption{Crop Recommendation Output showing predicted crop and confidence score}
+    \label{fig:prototype_output}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{Screenshot 2026-05-21 105226.png}
+    \caption{EDA Dashboard showing dataset summary statistics and NPK bar chart}
+    \label{fig:eda_dashboard}
+\end{figure}
+
+\section{Model Performance}
+
+\begin{center}
+\fontsize{11}{13}\selectfont
+\begin{tabular}{|l|c|c|c|c|}
+\hline
+\textbf{Algorithm} & \textbf{Accuracy} & \textbf{Precision} &
+\textbf{Recall} & \textbf{F1 Score} \\
+\hline
+Random Forest (selected) & \textbf{93.25\%} & \textbf{93.5\%} &
+\textbf{93.2\%} & \textbf{93.3\%} \\
+\hline
+XGBoost        & 92.8\% & 92.9\% & 92.7\% & 92.8\% \\
+\hline
+Decision Tree  & 88.4\% & 88.2\% & 88.5\% & 88.3\% \\
+\hline
+Naive Bayes    & 84.6\% & 85.1\% & 84.4\% & 84.7\% \\
+\hline
+\end{tabular}
+\end{center}
+
+\vspace{8pt}
+
+\noindent All metrics were computed on the held-out 20\% test set using
+scikit-learn's \texttt{classification\_report()} with
+\texttt{average=`weighted'} to account for class imbalance across 20 crop
+labels. Random Forest was selected on the basis of highest accuracy,
+best precision-recall balance, and fastest inference time (under 50~ms
+per prediction).
+
+\section{Testing Approach}
+
+\textbf{Unit Testing} was applied to the weather module: for all six
+supported district inputs, the returned temperature and humidity values were
+verified to be within physically plausible ranges. Edge cases where a district
+name required mapping to a different city name recognised by the OpenWeatherMap
+API were verified and corrected.
+
+\textbf{Model Inference Testing} verified that for a representative set of
+input combinations covering all major crop classes, the model's top
+recommendation matched the expected agronomically appropriate crop based on
+the input feature values.
+
+\textbf{User Acceptance Testing} was conducted with simulated user
+profiles. All profiles successfully completed the end-to-end
+recommendation workflow (district selection, manual input entry, prediction)
+within two minutes of first accessing the application.
+
+
+% ==============================================================================
+%  CHAPTER 6: COMPARATIVE ANALYSIS
+% ==============================================================================
+\chapter{Comparative Analysis}
+
+\section{Comparison with Existing Systems}
+
+The following table compares the present project with eight existing published
+systems across parameters critical to practical agricultural deployment in Assam.
+
+\vspace{8pt}
+\begin{center}
+\fontsize{9}{11}\selectfont
+\setlength{\tabcolsep}{3pt}
+\begin{longtable}{|p{0.20\textwidth}|p{0.09\textwidth}|p{0.09\textwidth}
+                  |p{0.10\textwidth}|p{0.12\textwidth}|p{0.12\textwidth}|}
+\caption{Parameter-wise Comparison of Crop Recommendation Systems}\\
+\hline
+\textbf{System} &
+\textbf{Accuracy} &
+\textbf{Live Weather} &
+\textbf{Crop Coverage} &
+\textbf{Assam-Specific Crops} &
+\textbf{Web Deployment} \\
+\hline
+\endfirsthead
+\hline
+\textbf{System} &
+\textbf{Accuracy} &
+\textbf{Live Weather} &
+\textbf{Crop Coverage} &
+\textbf{Assam-Specific Crops} &
+\textbf{Web Deployment} \\
+\hline
+\endhead
+Reddy et al.\ (2019)  & N/A   & --- & 7 crops  & --- & ---          \\ \hline
+Rajak et al.\ (2017)  & N/A   & --- & 9 crops  & --- & ---          \\ \hline
+Gosai et al.\ (2021)  & 99.3\%& --- & 22 crops & --- & ---          \\ \hline
+Apat et al.\ (2023)   & 99.5\%& --- & 22 crops & --- & ---          \\ \hline
+Bandara et al.\ (2020)& 92\%  & Partial & 4 crops & --- & Mobile   \\ \hline
+Bhuyan et al.\ (2023) & 94\%  & --- & 5 (Assam)& Yes & Flask      \\ \hline
+Aarthi et al.\ (2025) & 98.2\%& --- & 22 crops & --- & Render.com \\ \hline
+Akkem et al.\ (2023)  & 98.9\%& --- & 22 crops & --- & Gradio  \\ \hline
+\textbf{Present Project} &
+\textbf{93.25\%} & \textbf{\checkmark} &
+\textbf{20 crops} & \textbf{Yes (Indigneous)} &
+\textbf{Gradio Cloud} \\
+\hline
+\end{longtable}
+\end{center}
+
+\section{Advantages of the Present System}
+
+\textbf{Indigenous Crop Coverage:} With 20 crop classes including Assam-specific
+indigenous varieties, the present system covers the crop diversity of the 
+region. This is the only system capable of recommending GI-tagged varieties 
+such as Joha Rice and Bhut Jolokia.
+
+\textbf{Only System with Live Weather Integration:} All reviewed competing
+systems require manual weather data entry or use static seasonal averages.
+The present system is the only one that automatically fetches live temperature
+and humidity from the OpenWeatherMap API.
+
+\textbf{Publicly Deployed Web Application:} The system is fully deployed on
+Gradio Community Cloud, accessible from any browser without installation.
+Several reviewed systems exist only as locally hosted prototypes.
+
+
+% ==============================================================================
+%  CHAPTER 7: COST AND FEASIBILITY ANALYSIS
+% ==============================================================================
+\chapter{Cost and Feasibility Analysis}
+
+\section{Development Cost Analysis}
+
+\begin{center}
+\fontsize{11}{13}\selectfont
+\begin{tabular}{|p{0.42\textwidth}|p{0.16\textwidth}|p{0.30\textwidth}|}
+\hline
+\textbf{Component} & \textbf{Cost (INR)} & \textbf{Notes} \\
+\hline
+Python 3.10 & 0 & Open-source \\
+\hline
+scikit-learn, Pandas, NumPy, Seaborn & 0 & Open-source \\
+\hline
+Gradio framework & 0 & Open-source \\
+\hline
+OpenWeatherMap API (free tier) & 0 & 60 calls/min; 1M calls/month \\
+\hline
+Gradio Community Cloud hosting & 0 & Unlimited public apps, free \\
+\hline
+GitHub repository & 0 & Free for public repositories \\
+\hline
+Kaggle base dataset & 0 & Public domain \\
+\hline
+\textbf{Total direct monetary cost} & \textbf{Rs. 0} & All tools free/open-source \\
+\hline
+\end{tabular}
+\end{center}
+
+\vspace{8pt}
+
+\noindent The direct monetary development cost of the present project is zero
+rupees. All tools, APIs, hosting platforms, and datasets used are freely
+available. The only true cost is the team's time investment.
+
+\section{Operational Cost Projection}
+
+For a production deployment serving up to 1,000 daily active farmer users,
+the system remains fully operational within free API tiers. OpenWeatherMap's
+free tier allows 60 API calls per minute and 1,000,000 calls per month, which
+comfortably covers 1,000 users each making one prediction per day. Gradio
+Community Cloud supports unlimited public applications with no compute cost.
+
+\section{Technical Feasibility}
+
+The system's technical feasibility is confirmed by three indicators. First,
+it is already successfully deployed and publicly accessible, confirming that all
+components function together in production. Second, the Gradio Cloud
+deployment completes in under 90~seconds on each code push to GitHub,
+demonstrating a maintainable and reproducible CI/CD pipeline. Third, the
+average end-to-end response time from button click to full results display is
+under two seconds on a standard mobile internet connection.
+
+\section{Economic Feasibility}
+
+The economic feasibility for end-users is high. The system requires only a
+smartphone and a mobile internet connection. It requires no app download, no
+registration, and no payment. For farmers guided toward high-value indigenous
+crops like Bhut Jolokia (Case 3 in Chapter~5), correct crop selection can
+represent a significant increase in farm-level income relative to default
+staple-crop choices.
+
+
+% ==============================================================================
+%  CHAPTER 8: SOCIETAL IMPACT
+% ==============================================================================
+\chapter{Societal Impact}
+
+\section{Benefits to Assam's Farming Community}
+
+The present project addresses a documented and measurable gap in agricultural
+decision support for Assam's farming community. The primary societal benefit
+is the democratisation of agronomic expertise: knowledge that previously
+required consultation with an agricultural extension officer---a service
+unavailable in many of Assam's districts---is now accessible to any user
+with a smartphone at no cost.
+
+The inclusion of 27 Assam-specific indigenous crop varieties carries a
+secondary societal benefit beyond economic yield improvement: it actively
+promotes the cultivation and preservation of indigenous crop varieties that
+are at risk of being replaced by generic high-yield varieties. GI-tagged crops
+like Joha Rice and Komal Saul are cultural heritage assets of Assam, and the
+system's ability to recommend them raises awareness of their agronomic viability.
+
+\section{Economic Impact}
+
+The economic impact of the system can be quantified at the individual farmer
+level. Correct crop selection based on live weather and soil data can prevent
+crop failure losses estimated at Rs.~15,000--50,000 per hectare per season
+for common mismatches such as planting water-intensive crops during drought
+months. The system's recommendation of high-value indigenous crops like
+Bhut Jolokia, which commands approximately Rs.~25,000 per quintal versus
+Rs.~2,200 for common rice, provides direct economic guidance.
+
+\section{Accessibility Advantages}
+
+The browser-based Gradio interface requires no installation and works on
+any device with a web browser. The zero-cost deployment model ensures the
+system remains accessible without subscription fees or app-store barriers.
+
+
+% ==============================================================================
+%  CHAPTER 9: CONCLUSION  [UPDATED]
+% ==============================================================================
+\chapter{Conclusion}
+
+This project has successfully designed, implemented, and publicly
+deployed a functional \textbf{Hybrid AI-based Crop Recommendation System} 
+specifically engineered for Assam's agricultural conditions. The system 
+achieves a unique technological fusion by combining a \textbf{Random Forest} 
+machine learning classifier with the \textbf{Groq Llama 3.3 70b} Generative 
+AI model, bridging the gap between automated classification and expert 
+human-like prescriptive guidance.
+
+The project demonstrates the complete Data Science Lifecycle: data collection 
+and regional augmentation for 20 crops, model training with \textbf{93.25\% 
+accuracy}, real-time REST API integration with OpenWeatherMap, and 
+deployment through the \textbf{Gradio} framework. 
+
+By providing context-aware advice alongside accurate predictions, the 
+system addresses the critical need for data-driven farming assistance in 
+Assam. The single-interface approach and secure environment-based 
+configuration ensure the project is not just a theoretical model, but a 
+production-ready prototype with the potential for real-world impact 
+on small and marginal farmers. 
+
+From a technical standpoint, the successful integration of Large Language 
+Models (LLMs) to provide prescriptive analytics represents a significant 
+advancement over traditional one-word prediction systems, making the Assam 
+Crop Advisor a unique and modern solution in the field of Precision 
+Agriculture.
+
+
+% ==============================================================================
+%  CHAPTER 10: FUTURE SCOPE  [UPDATED — advanced features moved here]
+% ==============================================================================
+\chapter{Future Scope}
+
+The present prototype provides a solid and deployed foundation upon which
+several high-impact extensions can be built. The following directions represent
+the most technically feasible and socially impactful next steps:
+
+\begin{enumerate}[leftmargin=0.7in, label=\textbf{\arabic*.}, itemsep=8pt]
+
+\item \textbf{Simple Mode with Soil-Type Selector.}
+Implementing a ``Simple Mode'' in which farmers select their soil type from
+a dropdown (e.g., Alluvial, Red Laterite, Sandy Loam) and the system maps
+this choice to ICAR-validated regional baseline NPK values would eliminate
+the current requirement for users to know exact soil nutrient concentrations.
+This would make the system accessible to the majority of small and marginal
+farmers who do not have laboratory soil test results.
+
+\item \textbf{Fertilizer Prescription Calculator.}
+Adding an ICAR-standard NPK deficit calculation module that outputs exact
+Urea, DAP, and MOP application rates in kg/hectare for the recommended crop
+would transform the system from a pure classifier into a complete prescriptive
+agricultural decision support tool.
+
+\item \textbf{Market Economics Forecaster.}
+Implementing a per-hectare financial projection module using Assam Mandi
+price data to compute gross revenue, estimated input cost, net profit, and
+Return on Investment (ROI) would give farmers quantified economic guidance
+to complement the agronomic recommendation.
+
+\item \textbf{Cloud-Based Vision AI via Google Gemini.}
+Integrating the Google Gemini multimodal API would allow farmers to upload
+a photograph of a crop or plant and receive a botanically reasoned
+identification, enabling automatic pre-filling of the soil type selector
+and supporting identification of rare indigenous varieties such as Bao Rice,
+Komal Saul, and Bhut Jolokia.
+
+\item \textbf{Assamese Language Interface and Text-to-Speech.}
+Implementing a bilingual English--Assamese (\textit{অসমীয়া}) interface with
+browser-native text-to-speech output would extend the system's reach to the
+estimated 15 million Assamese-speaking rural residents currently excluded
+from English-only agricultural platforms.
+
+\item \textbf{PDF Report Generation.}
+Generating a downloadable PDF report containing the crop recommendation,
+agronomic rationale, and fertilizer guidance would provide farmers with a
+physical record they can share with extension officers or financial
+institutions for agricultural loan applications.
+
+\item \textbf{SQLite Database for Historical Tracking.}
+Persisting each recommendation session to a local SQLite database would
+enable historical analytics, regional trend identification, and longitudinal
+tracking of district-level recommendation patterns.
+
+\item \textbf{Expanded District Coverage.}
+Extending the weather API integration from the current 5 hardcoded districts
+to all 35 administrative districts of Assam would make the system applicable
+to the full geographic scope of the state.
+
+\item \textbf{Native Android Application.}
+Converting the Gradio web application to a Flutter-based Android app would
+enable offline functionality for farmers in areas without consistent internet
+access. The ML model can be exported to TensorFlow Lite format and bundled
+directly in the APK.
+
+\item \textbf{Integration with Government Agricultural Schemes.}
+Linking the system to the Government of Assam's active agricultural subsidy
+and insurance schemes---including Pradhan Mantri Fasal Bima Yojana (PMFBY)
+and PM-KISAN---would allow the system to inform farmers which government
+programs apply to their recommended crop.
+
+\end{enumerate}
+
+\appendix
+
+% ==============================================================================
+%  APPENDIX A: SOURCE CODE
+% ==============================================================================
+\chapter{Source Code}
+
+\section{train.py — Model Training Script}
+\begin{lstlisting}[language=Python]
+import pandas as pd
+import pickle
+from sklearn.model_selection import train_test_split
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.preprocessing import LabelEncoder
+
+print("Loading dataset...")
+df = pd.read_csv("data/Crop_recommendation.csv")
+
+X = df[['N', 'P', 'K', 'temperature', 'humidity', 'ph', 'rainfall']]
+y = df['label']
+
+le = LabelEncoder()
+y_encoded = le.fit_transform(y)
+
+X_train, X_test, y_train, y_test = train_test_split(X, y_encoded, test_size=0.2, random_state=42)
+
+print("Training the Random Forest model...")
+model = RandomForestClassifier(n_estimators=100, random_state=42)
+model.fit(X_train, y_train)
+
+accuracy = model.score(X_test, y_test)
+print(f"Model Training Complete! Accuracy: {accuracy * 100:.2f}%")
+
+pickle.dump(model, open("model/crop_model.pkl", "wb"))
+pickle.dump(le, open("model/label_encoder.pkl", "wb"))
+\end{lstlisting}
+
+\section{weather.py — Weather Integration Module}
+\begin{lstlisting}[language=Python]
+import requests
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
+
+def get_live_weather(city_name):
+    api_key = os.getenv("WEATHER_API_KEY")
+    url = f"http://api.openweathermap.org/data/2.5/weather?q={city_name}&appid={api_key}&units=metric"
+    
+    try:
+        response = requests.get(url, timeout=10)
+        data = response.json()
+        if response.status_code == 200:
+            temp = data['main']['temp']
+            humidity = data['main']['humidity']
+            return temp, humidity, "Success"
+        else:
+            return None, None, f"Error: {data.get('message')}"
+    except Exception as e:
+        return None, None, f"Connection Failed: {e}"
+\end{lstlisting}
+
+\section{app.py — Main Gradio UI and Flood Recovery Logic}
+\begin{lstlisting}[language=Python]
+import gradio as gr
+import pandas as pd
+import pickle
+import numpy as np
+import os
+import json
+from weather import get_live_weather
+from groq import Groq
+
+# Load Assets
+model = pickle.load(open("model/crop_model.pkl", "rb"))
+le = pickle.load(open("model/label_encoder.pkl", "rb"))
+with open("config/crop_info.json", "r", encoding="utf-8") as f:
+    CROP_DATA = json.load(f)
+
+def get_ai_advice(crop, n, p, k, temp):
+    client = Groq(api_key=os.getenv("GROQ_API_KEY"))
+    prompt = f"1 short farming tip for {crop} in Assam (Soil N:{n}, P:{p}, K:{k}, Temp:{temp}C)."
+    res = client.chat.completions.create(model="llama-3.3-70b-versatile", messages=[{"role": "user", "content": prompt}])
+    return res.choices[0].message.content
+
+def advisor(n, p, k, ph, rain, district, soil, flood):
+    temp, hum, _ = get_live_weather(district)
+    features = np.array([[n, p, k, temp, hum, ph, rain]])
+    
+    probs = model.predict_proba(features)[0]
+    top_5_idx = np.argsort(probs)[-5:][::-1]
+    top_5_crops = le.inverse_transform(top_5_idx)
+    top_5_probs = probs[top_5_idx]
+
+    primary_crop = top_5_crops[0].lower()
+    crop_info = CROP_DATA.get(primary_crop, {})
+    advice = get_ai_advice(primary_crop, n, p, k, temp)
+    
+    res_str = f"Top Recommendation: {crop_info.get('local_name')}\nAI Advice: {advice}"
+    if flood: res_str += f"\nFlood Recovery: {crop_info.get('recovery')}"
+    return res_str
+
+# Gradio UI Construction...
+\end{lstlisting}
+
+\section{config/crop\_info.json — Sample Entries}
+\begin{lstlisting}[language=json]
+{
+  "rice": {
+    "local_name": "Sali Dhan (শালি ধান)",
+    "recovery": "If your Sali rice is submerged, use 'Swarna Sub-1' varieties..."
+  },
+  "assam_tea": {
+    "local_name": "Chah (চাহ)",
+    "recovery": "Tea bushes cannot stand waterlogging. Dig deep drainage trenches..."
+  },
+  "bhut_jolokia": {
+    "local_name": "Bhut Jolokia (ভোট জলকীয়া)",
+    "recovery": "Extremely sensitive to moisture. Apply fungicide immediately..."
+  }
+}
+\end{lstlisting}
+
+% ==============================================================================
+%  APPENDIX B: ARCHITECTURE DIAGRAM
+% ==============================================================================
+\chapter{Architecture Diagram}
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.95\linewidth]{architecture_diagram.png}
+    \caption{Full-scale System Architecture of the Assam Crop Advisor.}
+\end{figure}
+
+% ==============================================================================
+%  APPENDIX C: GLOSSARY
+% ==============================================================================
+\chapter{Glossary}
+
+\begin{description}
+    \item[Random Forest] An ensemble learning method for classification that operates by constructing a multitude of decision trees at training time.
+    \item[NPK] The three primary nutrients in commercial fertilizers: Nitrogen (N), Phosphorus (P), and Potassium (K).
+    \item[Gini Impurity] A measure of how often a randomly chosen element from the set would be incorrectly labeled.
+    \item[REST API] Representational State Transfer Application Programming Interface, used for web-based system communication.
+    \item[Gradio] An open-source Python library used to build and share interactive machine learning web interfaces.
+    \item[GI Tag] Geographical Indication tag, identifying products originating from a specific location (e.g., Joha Rice).
+    \item[Precision/Recall] Metrics used to evaluate the accuracy of a classification model.
+    \item[Feature Vector] An n-dimensional vector of numerical features that represent the system inputs.
+\end{description}
+
+\end{document}
